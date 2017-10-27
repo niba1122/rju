@@ -33,12 +33,13 @@ mod ffi {
     }
 }
 
-fn h() {
-    println!("element generated!");
+fn h(tagname: &str, children: Vec<String>) -> String {
+    //println!("{} generated!", tagname);
+    return format!("{}[{}]", tagname, children.concat())
 }
 
 extern fn hoge() {
-    println!("loop");
+    //println!("loop");
 }
 
 fn main() {
@@ -61,12 +62,12 @@ fn main() {
     });
     
     ");
+    //sum(1, 2);
     html!("
       <html>
         <body>
           <h1>Hello World</h1>
-          <p>hogehogehoge</p>
-          <p>hogehogefugafuga</p>
+          <p>aiueo</p>
         </body>
       </html>
     ");
@@ -77,5 +78,12 @@ fn main() {
 
 #[no_mangle]
 pub extern fn sum(a: i32, b: i32) -> i32 {
+    println!("success: {}", html!("
+      <html>
+        <body>
+          <h1>Hello World</h1>
+        </body>
+      </html>
+    "));
     a * b
 }

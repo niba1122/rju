@@ -7,8 +7,9 @@ use proc_macro::TokenStream;
 #[proc_macro]
 pub fn html(input: TokenStream) -> TokenStream {
     let text = input.to_string();
-    html_parser::parse(text);
-    "h()".parse().unwrap()
+    //print!("{}", html_parser::parse(text));
+    //"h()".parse().unwrap()
+    html_parser::parse(text).parse().unwrap()
 }
 
   extern crate html5ever;
@@ -21,29 +22,48 @@ mod html_parser {
   use html5ever::driver::Parser;
   use std::str::FromStr;
   use std::iter::repeat;
+  use std::fmt;
+  use std::fmt::Write;
 
   fn escape_default(s: &str) -> String {
     s.chars().flat_map(|c| c.escape_default()).collect()
   }
 
-  fn walk(indent: usize, handle: Handle) {
+  fn walk(indent: usize, handle: Handle) -> String {
+      let mut output = String::new();
+
       let node = handle;
-      // FIXME: don't allocate
+      write!(&mut output, "{}", repeat(" ").take(indent).collect::<String>());
+      print!("{}", repeat(" ").take(indent).collect::<String>());
       match node.data {
           NodeData::Document
-              //=> println!("#Document"),
-              => print!(""),
+              //=> print!("h(\"document\", "),
+              => {
+                  write!(&mut output, "h(\"document\", ");
+                    // print!("h(\"document\", ");
+               },
 
           NodeData::Doctype { ref name, ref public_id, ref system_id }
-              => println!("<!DOCTYPE {} \"{}\" \"{}\">", name, public_id, system_id),
+              //=> println!("<!DOCTYPE {} \"{}\" \"{}\">", name, public_id, system_id),
+              => {
+                   write!(&mut output, "h(\"doctype\", ");
+                //    print!("h(\"doctype\", ");
+                 },
 
           NodeData::Text { ref contents }
               //=> println!("#text: {}", escape_default(&contents.borrow())),
-              => print!(""),
+              => {
+                   write!(&mut output, "h(\"text\", ");
+                //    print!("h(\"text\", ");
+                   
+                   },
 
           NodeData::Comment { ref contents }
               //=> println!("<!-- {} -->", escape_default(contents)),
-              => println!(""),
+              => {
+                   write!(&mut output, "h(\"comment\", ");
+                //    print!("h(\"comment\", ");
+                    },
 
           NodeData::Element { ref name, ref attrs, .. } => {
               /*print!("<{}", name.local);
@@ -51,37 +71,40 @@ mod html_parser {
                   print!(" {}=\"{}\"", attr.name.local, attr.value);
               }
               println!(">");*/
-              print!("{}", repeat(" ").take(indent).collect::<String>());
-              println!("h(\"{}\", [\n", name.local);
+              write!(&mut output, "h(\"{}\", ", name.local);
+            //   print!("h(\"{}\", ", name.local);
           }
 
           NodeData::ProcessingInstruction { .. } => unreachable!()
       }
 
-      for child in node.children.borrow().iter() {
-          walk(indent+4, child.clone());
+    //   print!("[\n");
+      //write!(&mut output, "[\n");
+      write!(&mut output, "vec![\n");
+      for (i, child) in node.children.borrow().iter().enumerate() {
+          if i > 0 {
+              write!(&mut output, ",\n");
+            //   print!(",\n");
+          }
+          let child_str = walk(indent+4, child.clone());
+          write!(&mut output, "{}", child_str);
       }
-        let hoge = node.children.borrow().iter().map(|x| {
-        String::from("hoge")
-        }).collect::<Vec<String>>().join(",");
-        println!("{:?}", hoge);
+    //   print!("\n");
+    //   print!("{}", repeat(" ").take(indent).collect::<String>());
+    //   print!("])");
+      write!(&mut output, "\n");
+      write!(&mut output, "{}", repeat(" ").take(indent).collect::<String>());
+      write!(&mut output, "])");
 
-      match node.data {
-          NodeData::Element{ ref name, ref attrs, .. }
-            => {
-              print!("{}", repeat(" ").take(indent).collect::<String>());
-              println!("])");
-            },
-            _ => {}
-      }
+      return output;
   }
 
-  pub fn parse(html: String) {
+  pub fn parse(html: String) -> String {
     let str = Tendril::from_str(&*html).unwrap();
     let mut parser = parse_document(RcDom::default(), Default::default());
     parser.process(str);
     let dom = parser.finish();
-    walk(0, dom.document);
+    return walk(0, dom.document);
     //println!("{:?}", dom.document.children.borrow().iter().aldskfj());
 
   }

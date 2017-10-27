@@ -7,5 +7,7 @@ rustup target add wasm32-unknown-emscripten
 
 rustup override set nightly
 
-## rustcは以下のオプションが有ると失敗する
- --crate-type bin
+
+
+* main()でstdoutするとおかしくなる？？
+* コンパイルは`cargo build && find . -regex ".*deps.*wasm" -exec cp {} ./hello.wasm \;`
