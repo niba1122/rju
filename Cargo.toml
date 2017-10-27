@@ -1,0 +1,11 @@
+[package]
+name = "rju"
+version = "0.1.0"
+authors = ["Nobuhito Ibaraki <niba1122@gmail.com>"]
+
+[dependencies]
+html5ever = "*"
+libc = "0.2"
+
+[lib]
+proc-macro = true

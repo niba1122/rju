@@ -1,0 +1,8 @@
+[build]
+target = "wasm32-unknown-emscripten"
+s = "EXPORTED_FUNCTIONS=['_sum']"
+
+[target.wasm32-unknown-emscripten]
+rustflags = [
+    "-Clink-arg=-s EXPORTED_FUNCTIONS=['_sum'],--js-library html/library.js"
+]
