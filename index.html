@@ -7,7 +7,7 @@ fetch('hello.wasm')
   .then((buffer) => {
     Module.wasmBinary = buffer
     var script = document.createElement('script')
-    script.src = "target/wasm32-unknown-emscripten/debug/rju.js"
+    script.src = "target/wasm32-unknown-emscripten/debug/rju_macro.js"
     document.body.appendChild(script)
 
     script.addEventListener('load', (e) => {

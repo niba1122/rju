@@ -16,31 +16,25 @@ mod html_parser {
   use html5ever::rcdom::{NodeData, RcDom, Handle};
   use html5ever::tendril::TendrilSink;
   use html5ever::tendril::Tendril;
-  use html5ever::driver::Parser;
   use std::str::FromStr;
-  use std::iter::repeat;
-  use std::fmt;
-  use std::fmt::Write;
   use std::cell::{RefCell};
   use std::borrow::Cow;
 
   fn generate_child_elements_string(children: &RefCell<Vec<Handle>>) -> String {
       let mut output: String = String::new();
-      write!(&mut output, "vec![");
+      output.push_str("vec![");
       for (i, child) in children.borrow().iter().enumerate() {
           if i > 0 {
-              write!(&mut output, ",");
+              output.push_str(",");
           }
           let child_str = generate_create_element_string(0, child.clone());
-          write!(&mut output, "{}", child_str);
+          output.push_str(&child_str);
       }
-      write!(&mut output, "]");
+      output.push_str("]");
       format!("{}", output)
   }
 
-  fn generate_create_element_string<'a>(indent: usize, handle: Handle) -> String {
-      let output = String::new();
-
+  fn generate_create_element_string<'a>(_indent: usize, handle: Handle) -> String {
       let node = handle;
       let tag_name: Cow<'a, str>;
       match node.data {
