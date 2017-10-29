@@ -33,7 +33,7 @@ mod ffi {
     }
 }
 
-fn h(tagname: &str, children: Vec<String>) -> String {
+fn h(tagname: &str, children: Vec<String>, attributes: Vec<String>) -> String {
     //println!("{} generated!", tagname);
     return format!("{}[{}]", tagname, children.concat())
 }

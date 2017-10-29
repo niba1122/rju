@@ -24,95 +24,69 @@ mod html_parser {
   use std::iter::repeat;
   use std::fmt;
   use std::fmt::Write;
+  use std::cell::{RefCell};
+  use std::borrow::Cow;
 
-  fn escape_default(s: &str) -> String {
-    s.chars().flat_map(|c| c.escape_default()).collect()
+  fn generate_child_elements_string(children: &RefCell<Vec<Handle>>) -> String {
+      let mut output: String = String::new();
+      write!(&mut output, "vec![");
+      for (i, child) in children.borrow().iter().enumerate() {
+          if i > 0 {
+              write!(&mut output, ",");
+          }
+          let child_str = generate_create_element_string(0, child.clone());
+          write!(&mut output, "{}", child_str);
+      }
+      write!(&mut output, "]");
+      format!("{}", output)
   }
 
-  fn walk(indent: usize, handle: Handle) -> String {
-      let mut output = String::new();
+  fn generate_create_element_string<'a>(indent: usize, handle: Handle) -> String {
+      let output = String::new();
 
       let node = handle;
-      write!(&mut output, "{}", repeat(" ").take(indent).collect::<String>());
-      print!("{}", repeat(" ").take(indent).collect::<String>());
+      let tag_name: Cow<'a, str>;
       match node.data {
           NodeData::Document
-              //=> print!("h(\"document\", "),
               => {
-                  write!(&mut output, "h(\"document\", ");
-                    // print!("h(\"document\", ");
-               },
+                  tag_name = Cow::Owned("document".to_string())
+                },
 
           NodeData::Doctype { ref name, ref public_id, ref system_id }
-              //=> println!("<!DOCTYPE {} \"{}\" \"{}\">", name, public_id, system_id),
               => {
-                   write!(&mut output, "h(\"doctype\", ");
-                //    print!("h(\"doctype\", ");
+                    tag_name = Cow::Owned("doctype".to_string())
                  },
 
           NodeData::Text { ref contents }
-              //=> println!("#text: {}", escape_default(&contents.borrow())),
               => {
-                   write!(&mut output, "h(\"text\", ");
-                //    print!("h(\"text\", ");
+                    tag_name = Cow::Owned("text".to_string())
                    
                    },
 
           NodeData::Comment { ref contents }
-              //=> println!("<!-- {} -->", escape_default(contents)),
               => {
-                   write!(&mut output, "h(\"comment\", ");
-                //    print!("h(\"comment\", ");
+                    tag_name = Cow::Owned("comment".to_string())
                     },
 
           NodeData::Element { ref name, ref attrs, .. } => {
-              /*print!("<{}", name.local);
-              for attr in attrs.borrow().iter() {
-                  print!(" {}=\"{}\"", attr.name.local, attr.value);
-              }
-              println!(">");*/
-              write!(&mut output, "h(\"{}\", ", name.local);
-            //   print!("h(\"{}\", ", name.local);
+              tag_name = Cow::Owned(name.local.to_string())
           }
 
           NodeData::ProcessingInstruction { .. } => unreachable!()
       }
 
-    //   print!("[\n");
-      //write!(&mut output, "[\n");
-      write!(&mut output, "vec![\n");
-      for (i, child) in node.children.borrow().iter().enumerate() {
-          if i > 0 {
-              write!(&mut output, ",\n");
-            //   print!(",\n");
-          }
-          let child_str = walk(indent+4, child.clone());
-          write!(&mut output, "{}", child_str);
-      }
-    //   print!("\n");
-    //   print!("{}", repeat(" ").take(indent).collect::<String>());
-    //   print!("])");
-      write!(&mut output, "\n");
-      write!(&mut output, "{}", repeat(" ").take(indent).collect::<String>());
-      write!(&mut output, "])");
+      let children: String = generate_child_elements_string(&node.children);
 
-      return output;
+      let attributes = "vec![]";
+      format!("h(\"{}\", {}, {})", tag_name.into_owned(), children, attributes)
   }
 
-  pub fn parse(html: String) -> String {
+  pub fn parse<'a>(html: String) -> String {
     let str = Tendril::from_str(&*html).unwrap();
     let mut parser = parse_document(RcDom::default(), Default::default());
     parser.process(str);
     let dom = parser.finish();
-    return walk(0, dom.document);
-    //println!("{:?}", dom.document.children.borrow().iter().aldskfj());
+    return generate_create_element_string(0, dom.document);
 
   }
 }
-/*
-#[plugin_registrar]
-pub fn plugin_registrar(reg: &mut Registry) {
-    reg.register_macro("rn", expand_rn);
-    reg.register_macro("html", expand_html);
-}
-*/
