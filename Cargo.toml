@@ -1,5 +1,5 @@
 [package]
-name = "rju"
+name = "rju_macro"
 version = "0.1.0"
 authors = ["Nobuhito Ibaraki <niba1122@gmail.com>"]
 

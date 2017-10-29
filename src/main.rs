@@ -1,6 +1,6 @@
 #![feature(proc_macro)]
-extern crate rju;
-pub use rju::{html};
+extern crate rju_macro;
+pub use rju_macro::{html};
 
 use std::ffi::CString;
 extern crate libc;

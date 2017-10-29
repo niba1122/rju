@@ -1,4 +1,3 @@
-#![crate_type="proc-macro"]
 #![feature(proc_macro)]
 extern crate proc_macro;
 
@@ -7,8 +6,6 @@ use proc_macro::TokenStream;
 #[proc_macro]
 pub fn html(input: TokenStream) -> TokenStream {
     let text = input.to_string();
-    //print!("{}", html_parser::parse(text));
-    //"h()".parse().unwrap()
     html_parser::parse(text).parse().unwrap()
 }
 
