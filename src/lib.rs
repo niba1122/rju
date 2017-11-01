@@ -6,10 +6,14 @@
 //    }
 //}
 //
-use std::fmt;
-
-use std::ffi::CString;
 extern crate libc;
+
+use std::fmt;
+use std::ffi::CString;
+
+extern crate rand;
+
+use rand::Rng;
 
 pub struct VirtualDOM {
     name: String,
@@ -23,7 +27,7 @@ impl fmt::Display for VirtualDOM {
         for child in self.children.iter() {
             children_string.push_str(&format!("{}", child))
         }
-        write!(f, "[{}({}){}]", self.name, children_string, "")
+        write!(f, "[{}({}){}]", self.name, "", children_string)
     }
 }
 
@@ -39,11 +43,52 @@ impl Component {
     }
 }
 
-pub fn h(tagname: &str, children: Vec<VirtualDOM>, attributes: Vec<String>) -> VirtualDOM {
+pub struct Renderer;
+impl Renderer {
+    pub fn patch(dom_id: &str, virtual_dom: VirtualDOM) {
+        eval(&format!("
+            (function() {{
+                var parentDOMId = '{}';
+                document.getElementById(parentDOMId).innerHTML = null;
+            }})();
+        ", dom_id));
+        Renderer::render_dom(dom_id, &virtual_dom)
+    }
+
+    fn render_dom(dom_id: &str, virtual_dom: &VirtualDOM) {
+        let mut rng = rand::thread_rng();
+        let new_dom_id: &str = &rng.gen::<i32>().to_string();
+
+        let hoge: String;
+        if virtual_dom.attributes.len() > 0 {
+            hoge = virtual_dom.attributes[0].clone();
+        } else {
+            hoge = "".to_string();
+        }
+
+        eval(&format!("
+            (function() {{
+                var domName = '{}';
+                var parentDOMId = '{}';
+                var newDOMId = '{}';
+                var domAttributes = \"{}\";
+                var dom = document.createElement(domName);
+                dom.id = newDOMId;
+                dom.textContent = '[' + domName + '](' + domAttributes + ')';
+                document.getElementById(parentDOMId).appendChild(dom);
+            }})();
+        ", virtual_dom.name, dom_id, new_dom_id, hoge));
+        for child in virtual_dom.children.iter() {
+            Renderer::render_dom(new_dom_id, child);
+        }
+    }
+}
+
+pub fn h(tagname: &str, children: Vec<VirtualDOM>, attributes: Vec<&str>) -> VirtualDOM {
     return VirtualDOM {
         name: tagname.to_string(),
         children: children,
-        attributes: attributes
+        attributes: attributes.iter().map(|&x| x.to_string()).collect::<Vec<_>>()
     }
 }
 
