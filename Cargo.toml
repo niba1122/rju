@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Nobuhito Ibaraki <niba1122@gmail.com>"]
 
 [dependencies]
-html5ever = "*"
+xml5ever = "*"
 rju = { path = "../rju" }
 
 [lib]

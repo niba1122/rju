@@ -2,7 +2,7 @@
 extern crate rju;
 extern crate rju_macro;
 
-use rju::{h, start};
+use rju::{h, start, Renderer};
 use rju::{eval};
 use rju_macro::{html};
 
@@ -36,6 +36,9 @@ fn main() {
         </body>
       </html>
     ");
+
+    Renderer::patch("test", html!("<strong attr='test'></strong>"));
+
     start();
     
 }
