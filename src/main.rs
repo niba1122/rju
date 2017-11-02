@@ -37,8 +37,7 @@ fn main() {
       </html>
     ");
 
-    Renderer::patch("test", html!("<strong attr='test'></strong>"));
-
+    Renderer::patch("test", html!("<strong attr='test' style='display: block; width: 100%; text-align: center;'></strong>"));
     start();
     
 }
@@ -52,5 +51,5 @@ pub extern fn sum(a: i32, b: i32) -> i32 {
         </body>
       </html>
     "));
-    a * b
+   a * b
 }
