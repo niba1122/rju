@@ -18,7 +18,7 @@ use rand::Rng;
 pub struct VirtualDOM {
     name: String,
     children: Vec<VirtualDOM>,
-    attributes: Vec<String>
+    attributes: Vec<String>,
 }
 
 impl fmt::Display for VirtualDOM {
@@ -32,11 +32,15 @@ impl fmt::Display for VirtualDOM {
 }
 
 pub struct Component {
-    root_dom: VirtualDOM
+    root_dom: VirtualDOM,
 }
 impl Component {
     fn render(&self) -> VirtualDOM {
-        VirtualDOM {name: "".to_string(), children: vec![], attributes: vec![]}
+        VirtualDOM {
+            name: "".to_string(),
+            children: vec![],
+            attributes: vec![],
+        }
     }
     fn update(&self) {
         //root_dom.children = vec![self.render()]
@@ -46,12 +50,15 @@ impl Component {
 pub struct Renderer;
 impl Renderer {
     pub fn patch(dom_id: &str, virtual_dom: VirtualDOM) {
-        eval(&format!("
+        eval(&format!(
+            "
             (function() {{
                 var parentDOMId = '{}';
                 document.getElementById(parentDOMId).innerHTML = null;
             }})();
-        ", dom_id));
+        ",
+            dom_id
+        ));
         Renderer::render_dom(dom_id, &virtual_dom)
     }
 
@@ -66,7 +73,8 @@ impl Renderer {
             hoge = "".to_string();
         }
 
-        eval(&format!("
+        eval(&format!(
+            "
             (function() {{
                 var domName = '{}';
                 var parentDOMId = '{}';
@@ -77,7 +85,12 @@ impl Renderer {
                 dom.textContent = '[' + domName + '](' + domAttributes + ')';
                 document.getElementById(parentDOMId).appendChild(dom);
             }})();
-        ", virtual_dom.name, dom_id, new_dom_id, hoge));
+        ",
+            virtual_dom.name,
+            dom_id,
+            new_dom_id,
+            hoge
+        ));
         for child in virtual_dom.children.iter() {
             Renderer::render_dom(new_dom_id, child);
         }
@@ -88,13 +101,16 @@ pub fn h(tagname: &str, children: Vec<VirtualDOM>, attributes: Vec<&str>) -> Vir
     return VirtualDOM {
         name: tagname.to_string(),
         children: children,
-        attributes: attributes.iter().map(|&x| x.to_string()).collect::<Vec<_>>()
-    }
+        attributes: attributes
+            .iter()
+            .map(|&x| x.to_string())
+            .collect::<Vec<_>>(),
+    };
 }
 
 pub fn start() {
     unsafe {
-      ffi::emscripten_set_main_loop(ffi::hoge, 0, 0);
+        ffi::emscripten_set_main_loop(ffi::hoge, 0, 0);
     }
 }
 
@@ -114,10 +130,9 @@ mod ffi {
 
         // This extern is built in by Emscripten.
         pub fn emscripten_run_script_int(x: *const c_char) -> c_int;
-        pub fn emscripten_set_main_loop(m: extern fn(), fps: c_int, infinite: c_int);
+        pub fn emscripten_set_main_loop(m: extern "C" fn(), fps: c_int, infinite: c_int);
     }
-    pub extern fn hoge() {
+    pub extern "C" fn hoge() {
         //println!("loop");
     }
 }
-
