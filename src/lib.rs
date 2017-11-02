@@ -18,7 +18,7 @@ use rand::Rng;
 pub struct VirtualDOM {
     name: String,
     children: Vec<VirtualDOM>,
-    attributes: Vec<String>,
+    attributes: Vec<(String, String)>,
 }
 
 impl fmt::Display for VirtualDOM {
@@ -66,12 +66,20 @@ impl Renderer {
         let mut rng = rand::thread_rng();
         let new_dom_id: &str = &rng.gen::<i32>().to_string();
 
-        let hoge: String;
-        if virtual_dom.attributes.len() > 0 {
-            hoge = virtual_dom.attributes[0].clone();
-        } else {
-            hoge = "".to_string();
+        let mut attributes_string: String = String::from("");
+
+        attributes_string.push_str("{");
+        for (i, attr) in virtual_dom.attributes.iter().enumerate() {
+            if (i > 0) {
+                attributes_string.push_str(",");
+            }
+            attributes_string.push_str("\"");
+            attributes_string.push_str(&attr.0);
+            attributes_string.push_str("\":\"");
+            attributes_string.push_str(&attr.1);
+            attributes_string.push_str("\"");
         }
+        attributes_string.push_str("}");
 
         eval(&format!(
             "
@@ -79,17 +87,22 @@ impl Renderer {
                 var domName = '{}';
                 var parentDOMId = '{}';
                 var newDOMId = '{}';
-                var domAttributes = \"{}\";
+                var domAttributes = {};
                 var dom = document.createElement(domName);
                 dom.id = newDOMId;
-                dom.textContent = '[' + domName + '](' + domAttributes + ')';
+                dom.textContent = '[' + domName + ']';
+                console.log(domAttributes);
+
+                Object.keys(domAttributes).forEach(function (key) {{
+                    dom.setAttribute(key, domAttributes[key]);
+                }});
                 document.getElementById(parentDOMId).appendChild(dom);
             }})();
         ",
             virtual_dom.name,
             dom_id,
             new_dom_id,
-            hoge
+            attributes_string
         ));
         for child in virtual_dom.children.iter() {
             Renderer::render_dom(new_dom_id, child);
@@ -97,14 +110,14 @@ impl Renderer {
     }
 }
 
-pub fn h(tagname: &str, children: Vec<VirtualDOM>, attributes: Vec<&str>) -> VirtualDOM {
+pub fn h(tagname: &str, children: Vec<VirtualDOM>, attributes: Vec<(&str, &str)>) -> VirtualDOM {
     return VirtualDOM {
         name: tagname.to_string(),
         children: children,
         attributes: attributes
             .iter()
-            .map(|&x| x.to_string())
-            .collect::<Vec<_>>(),
+            .map(|ref x| (x.0.to_string(), x.1.to_string()))
+            .collect::<Vec<_>>()
     };
 }
 
