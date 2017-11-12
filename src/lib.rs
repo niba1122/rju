@@ -43,13 +43,13 @@ pub enum DOMType {
 
 pub enum Attribute {
     String {
-        name: String,
+        name: &'static str,
         value: String
     },
     bool {
-        name: String,
+        name: &'static str,
         value: bool
-    }
+    },
     // EventHandler()
 }
 
@@ -113,6 +113,15 @@ impl Renderer {
         match virtual_dom.dom_type {
             DOMType::Element(ref name) => {
                 let new_dom = document().create_element(&virtual_dom.name);
+                for attribute in virtual_dom.attributes.iter() {
+                    match *attribute {
+                        Attribute::String { name, ref value } => {
+                            new_dom.class_list().add(value)
+                        },
+                        Attribute::bool { name, ref value } => {
+                        },
+                    }
+                }
                 parent_dom.append_child(&new_dom);
                 for child in virtual_dom.children.iter() {
                    Renderer::render_dom(&new_dom, child);
@@ -134,10 +143,6 @@ pub fn h(dom_type: DOMType, children: Vec<VirtualDOM>, attributes: Vec<Attribute
         name: dom_type.to_string(),
         dom_type: dom_type,
         children: children,
-        // attributes: attributes
-        //     .iter()
-        //     .map(|ref x| (x.0.to_string(), x.1.to_string()))
-        //     .collect::<Vec<_>>()
         attributes: attributes
     };
 }
