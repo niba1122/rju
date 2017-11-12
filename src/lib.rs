@@ -13,7 +13,6 @@ extern crate xml5ever;
 mod html_parser {
     use std::str::FromStr;
     use std::cell::RefCell;
-    use std::borrow::Cow;
 
     use xml5ever::tendril::{Tendril, TendrilSink};
     use xml5ever::driver::parse_document;
@@ -104,11 +103,24 @@ mod html_parser {
                         ref name,
                         ref value,
                     } = *attr;
-                    output.push_str("(\"");
-                    output.push_str(&*name.local);
-                    output.push_str("\", \"");
-                    output.push_str(value);
-                    output.push_str("\")");
+                    // output.push_str("(\"");
+                    // output.push_str(&*name.local);
+                    // output.push_str("\", \"");
+                    // output.push_str(value);
+                    // output.push_str("\")");
+
+                    match name.prefix {
+                        Some(ref prefix) => {
+                            if prefix.eq("bind") {
+                                output.push_str(&format!("Attribute::String{{name:\"{}\",value:{}}}", name.local, value));
+                            } else {
+                                output.push_str(&format!("Attribute::String{{name:\"{}:{}\",value:\"{}\".to_string()}}", prefix, name.local, value));
+                            }
+                        }
+                        None => {
+                            output.push_str(&format!("Attribute::String{{name:\"{}\",value:\"{}\"}}", name.local, value));
+                        }
+                    }
                 }
                 output.push_str("]");
                 format!("{}", output)
@@ -132,7 +144,7 @@ mod html_parser {
             attributes
         );
 
-        // println!("{}", result);
+        println!("{}", result);
         result
     }
 

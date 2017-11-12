@@ -11,10 +11,10 @@ fetch('hello.wasm')
     script.src = "target/wasm32-unknown-emscripten/debug/rju_macro.js"
     document.body.appendChild(script)
 
-    script.addEventListener('load', (e) => {
-        window.sum = Module.cwrap('sum', 'number', ['number', 'number']);
-        console.log(`1+2=${sum(1, 2)}`);
-          });
+    // script.addEventListener('load', (e) => {
+    //     window.sum = Module.cwrap('sum', 'number', ['number', 'number']);
+    //     console.log(`1+2=${sum(1, 2)}`);
+    //       });
 
 
   })

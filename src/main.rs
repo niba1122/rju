@@ -2,7 +2,7 @@
 extern crate rju;
 extern crate rju_macro;
 
-use rju::{h, Renderer, DOMType};
+use rju::{h, Renderer, DOMType, Attribute};
 use rju_macro::{html};
 
 
@@ -17,9 +17,11 @@ fn main() {
     ");
 
     Renderer::patch("test", html!("
-      <strong attr='test' style='display: block; width: 100%; text-align: center;'>
-      Hello World!!!!!!
-      </strong>"));
+      <div>
+        <strong bind:attr='(1 + 2).to_string()' b:attr2='hogehoge'>
+          Hello World!!!!!!
+        </strong>
+      </div>"));
 //    start();
     
 }
