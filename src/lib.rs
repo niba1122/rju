@@ -34,37 +34,10 @@ mod html_parser {
         format!("{}", output)
     }
 
-    fn generate_attributes_string(attrs: &RefCell<Vec<Attribute>>) -> String {
-        let mut output: String = String::new();
-        output.push_str("vec![");
-        for (i, attr) in attrs.borrow().iter().enumerate() {
-            if i > 0 {
-                output.push_str(",");
-            }
-            let Attribute {
-                ref name,
-                ref value,
-            } = *attr;
-            output.push_str("(\"");
-            output.push_str(&*name.local);
-            output.push_str("\", \"");
-            output.push_str(value);
-            output.push_str("\")");
-
-            //println!("{},{}", &*name.local, value.to_string());
-        }
-        output.push_str("]");
-        format!("{}", output)
-    }
-
-    fn generate_create_element_string<'a>(_indent: usize, handle: Handle) -> String {
-        let node = handle;
-        let tag_name: Cow<'a, str>;
-        let attributes: Cow<'a, str>;
-        match node.data {
+    fn generate_type_string(data: &NodeData) -> String {
+        match *data {
             NodeData::Document => {
-                tag_name = Cow::Owned("document".to_string());
-                attributes = Cow::Owned(generate_attributes_string(&RefCell::new(vec![])));
+                "Type::Element(\"document\")".to_string()
             }
 
             NodeData::Doctype {
@@ -72,18 +45,15 @@ mod html_parser {
                 ref public_id,
                 ref system_id,
             } => {
-                tag_name = Cow::Owned("doctype".to_string());
-                attributes = Cow::Owned(generate_attributes_string(&RefCell::new(vec![])));
+                "Type::Element(\"doctype\")".to_string()
             }
 
             NodeData::Text { ref contents } => {
-                tag_name = Cow::Owned("text".to_string());
-                attributes = Cow::Owned(generate_attributes_string(&RefCell::new(vec![])));
+                format!("Type::Text(\"{}\")", contents.borrow())
             }
 
             NodeData::Comment { ref contents } => {
-                tag_name = Cow::Owned("comment".to_string());
-                attributes = Cow::Owned(generate_attributes_string(&RefCell::new(vec![])));
+                "Type::Comment".to_string()
             }
 
             NodeData::Element {
@@ -91,22 +61,79 @@ mod html_parser {
                 ref attrs,
                 ..
             } => {
-                tag_name = Cow::Owned(name.local.to_string());
-                attributes = Cow::Owned(generate_attributes_string(attrs));
+                format!("Type::Element(\"{}\")", name.local.to_string())
+            }
+
+            NodeData::ProcessingInstruction { .. } => unreachable!(),
+        }
+    }
+    fn generate_attributes_string(data: &NodeData) -> String {
+        match *data {
+            NodeData::Document => {
+                "vec![]".to_string()
+            }
+
+            NodeData::Doctype {
+                ref name,
+                ref public_id,
+                ref system_id,
+            } => {
+                "vec![]".to_string()
+            }
+
+            NodeData::Text { ref contents } => {
+                "vec![]".to_string()
+            }
+
+            NodeData::Comment { ref contents } => {
+                "vec![]".to_string()
+            }
+
+            NodeData::Element {
+                ref name,
+                ref attrs,
+                ..
+            } => {
+                let mut output: String = String::new();
+                output.push_str("vec![");
+                for (i, attr) in attrs.borrow().iter().enumerate() {
+                    if i > 0 {
+                        output.push_str(",");
+                    }
+                    let Attribute {
+                        ref name,
+                        ref value,
+                    } = *attr;
+                    output.push_str("(\"");
+                    output.push_str(&*name.local);
+                    output.push_str("\", \"");
+                    output.push_str(value);
+                    output.push_str("\")");
+                }
+                output.push_str("]");
+                format!("{}", output)
             }
 
             NodeData::ProcessingInstruction { .. } => unreachable!(),
         }
 
-        let children: String = generate_child_elements_string(&node.children);
+    }
 
-        //let attributes = "vec![]";
-        format!(
-            "h(\"{}\", {}, {})",
-            tag_name.into_owned(),
+    fn generate_create_element_string<'a>(_indent: usize, handle: Handle) -> String {
+        let node = handle;
+        let children: String = generate_child_elements_string(&node.children);
+        let dom_type: String = generate_type_string(&node.data);
+        let attributes: String = generate_attributes_string(&node.data);
+
+        let result = format!(
+            "h({}, {}, {})",
+            dom_type,
             children,
-            attributes.into_owned()
-        )
+            attributes
+        );
+
+        // println!("{}", result);
+        result
     }
 
     pub fn parse<'a>(html: String) -> String {

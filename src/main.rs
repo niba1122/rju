@@ -2,32 +2,11 @@
 extern crate rju;
 extern crate rju_macro;
 
-use rju::{h, start, Renderer};
-use rju::{eval};
+use rju::{h, Renderer, Type};
 use rju_macro::{html};
 
 
 fn main() {
-    //library_func();
-    eval("
-    console.log('hogehoge');
-    var button = document.createElement('input');
-    button.type = 'button';
-    button.value = 'Dispatch event';
-    document.body.appendChild(button);
-
-    var ul = document.createElement('ul');
-    ul.id = 'list';
-    document.body.appendChild(ul);
-
-    button.addEventListener('click', function () {
-      var li = document.createElement('li');
-      li.textContent = sum(1, 2);
-      document.getElementById('list').appendChild(li);
-    });
-    
-    ");
-    //sum(1, 2);
     html!("
       <html>
         <body>
@@ -37,8 +16,11 @@ fn main() {
       </html>
     ");
 
-    Renderer::patch("test", html!("<strong attr='test' style='display: block; width: 100%; text-align: center;'></strong>"));
-    start();
+    Renderer::patch("test", html!("
+      <strong attr='test' style='display: block; width: 100%; text-align: center;'>
+      Hello World!!!!!!
+      </strong>"));
+//    start();
     
 }
 
