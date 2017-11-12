@@ -37,7 +37,7 @@ mod html_parser {
     fn generate_type_string(data: &NodeData) -> String {
         match *data {
             NodeData::Document => {
-                "Type::Element(\"document\")".to_string()
+                "DOMType::Element(\"document\")".to_string()
             }
 
             NodeData::Doctype {
@@ -45,15 +45,15 @@ mod html_parser {
                 ref public_id,
                 ref system_id,
             } => {
-                "Type::Element(\"doctype\")".to_string()
+                "DOMType::Element(\"doctype\")".to_string()
             }
 
             NodeData::Text { ref contents } => {
-                format!("Type::Text(\"{}\")", contents.borrow())
+                format!("DOMType::Text(\"{}\")", contents.borrow())
             }
 
             NodeData::Comment { ref contents } => {
-                "Type::Comment".to_string()
+                "DOMType::Comment".to_string()
             }
 
             NodeData::Element {
@@ -61,7 +61,7 @@ mod html_parser {
                 ref attrs,
                 ..
             } => {
-                format!("Type::Element(\"{}\")", name.local.to_string())
+                format!("DOMType::Element(\"{}\")", name.local.to_string())
             }
 
             NodeData::ProcessingInstruction { .. } => unreachable!(),

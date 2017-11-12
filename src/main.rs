@@ -2,7 +2,7 @@
 extern crate rju;
 extern crate rju_macro;
 
-use rju::{h, Renderer, Type};
+use rju::{h, Renderer, DOMType};
 use rju_macro::{html};
 
 
