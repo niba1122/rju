@@ -5,4 +5,4 @@ authors = ["Nobuhito Ibaraki <niba1122@gmail.com>"]
 
 [dependencies]
 libc = "0.2"
-rand = "0.3"
+stdweb = "*"

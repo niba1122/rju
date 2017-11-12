@@ -6,19 +6,42 @@
 //    }
 //}
 //
+
+#[macro_use]
+extern crate stdweb;
+use stdweb::web::{
+    IEventTarget,
+    IElement,
+    IHtmlElement,
+    INode,
+    HtmlElement,
+    Element,
+    document,
+    window
+};
+
 extern crate libc;
 
 use std::fmt;
-use std::ffi::CString;
-
-extern crate rand;
-
-use rand::Rng;
+// use std::ffi::CString;
 
 pub struct VirtualDOM {
     name: String,
+    dom_type: Type,
     children: Vec<VirtualDOM>,
     attributes: Vec<(String, String)>,
+}
+
+pub enum Type {
+    Element(&'static str),
+    Text(&'static str),
+    Comment,
+    Component,
+}
+
+pub enum AttributeValue {
+    String(String),
+    Block(())
 }
 
 impl fmt::Display for VirtualDOM {
@@ -27,92 +50,79 @@ impl fmt::Display for VirtualDOM {
         for child in self.children.iter() {
             children_string.push_str(&format!("{}", child))
         }
-        write!(f, "[{}({}){}]", self.name, "", children_string)
+        write!(f, "[{}({}){}]", self.name.to_string(), "", children_string)
     }
 }
 
-pub struct Component {
-    root_dom: VirtualDOM,
-}
-impl Component {
-    fn render(&self) -> VirtualDOM {
-        VirtualDOM {
-            name: "".to_string(),
-            children: vec![],
-            attributes: vec![],
+impl fmt::Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Type::Element(ref name) => {
+                write!(f, "{}", name)
+            },
+            Type::Text(ref string) => {
+                write!(f, "{}", string)
+            },
+            Type::Component => {
+                write!(f, "component")
+            }
+            Type::Comment => {
+                write!(f, "comment")
+            }
         }
     }
-    fn update(&self) {
-        //root_dom.children = vec![self.render()]
-    }
 }
+
+// pub struct Component {
+//     root_dom: VirtualDOM,
+// }
+// impl Component {
+//     fn render(&self) -> VirtualDOM {
+//         VirtualDOM {
+//             name: "".to_string(),
+//             children: vec![],
+//             attributes: vec![],
+//         }
+//     }
+//     fn update(&self) {
+//         //root_dom.children = vec![self.render()]
+//     }
+// }
 
 pub struct Renderer;
 impl Renderer {
     pub fn patch(dom_id: &str, virtual_dom: VirtualDOM) {
-        eval(&format!(
-            "
-            (function() {{
-                var parentDOMId = '{}';
-                document.getElementById(parentDOMId).innerHTML = null;
-            }})();
-        ",
-            dom_id
-        ));
-        Renderer::render_dom(dom_id, &virtual_dom)
+        stdweb::initialize();
+        // Renderer::render_dom(dom_id, &virtual_dom);
+
+        let root_dom = document().get_element_by_id(dom_id).unwrap();
+        Renderer::render_dom(&root_dom, &virtual_dom);
+        stdweb::event_loop();
     }
 
-    fn render_dom(dom_id: &str, virtual_dom: &VirtualDOM) {
-        let mut rng = rand::thread_rng();
-        let new_dom_id: &str = &rng.gen::<i32>().to_string();
-
-        let mut attributes_string: String = String::from("");
-
-        attributes_string.push_str("{");
-        for (i, attr) in virtual_dom.attributes.iter().enumerate() {
-            if (i > 0) {
-                attributes_string.push_str(",");
+    fn render_dom(parent_dom: &Element, virtual_dom: &VirtualDOM) {
+        match virtual_dom.dom_type {
+            Type::Element(ref name) => {
+                let new_dom = document().create_element(&virtual_dom.name);
+                parent_dom.append_child(&new_dom);
+                for child in virtual_dom.children.iter() {
+                   Renderer::render_dom(&new_dom, child);
+                }
             }
-            attributes_string.push_str("\"");
-            attributes_string.push_str(&attr.0);
-            attributes_string.push_str("\":\"");
-            attributes_string.push_str(&attr.1);
-            attributes_string.push_str("\"");
-        }
-        attributes_string.push_str("}");
-
-        eval(&format!(
-            "
-            (function() {{
-                var domName = '{}';
-                var parentDOMId = '{}';
-                var newDOMId = '{}';
-                var domAttributes = {};
-                var dom = document.createElement(domName);
-                dom.id = newDOMId;
-                dom.textContent = '[' + domName + ']';
-                console.log(domAttributes);
-
-                Object.keys(domAttributes).forEach(function (key) {{
-                    dom.setAttribute(key, domAttributes[key]);
-                }});
-                document.getElementById(parentDOMId).appendChild(dom);
-            }})();
-        ",
-            virtual_dom.name,
-            dom_id,
-            new_dom_id,
-            attributes_string
-        ));
-        for child in virtual_dom.children.iter() {
-            Renderer::render_dom(new_dom_id, child);
-        }
+            Type::Text(ref string) => {
+                let new_dom = document().create_text_node(string);
+                parent_dom.append_child(&new_dom);
+            }
+            Type::Component => {}
+            Type::Comment => {}
+        };
     }
 }
 
-pub fn h(tagname: &str, children: Vec<VirtualDOM>, attributes: Vec<(&str, &str)>) -> VirtualDOM {
+pub fn h(dom_type: Type, children: Vec<VirtualDOM>, attributes: Vec<(&str, &str)>) -> VirtualDOM {
     return VirtualDOM {
-        name: tagname.to_string(),
+        name: dom_type.to_string(),
+        dom_type: dom_type,
         children: children,
         attributes: attributes
             .iter()
@@ -121,31 +131,3 @@ pub fn h(tagname: &str, children: Vec<VirtualDOM>, attributes: Vec<(&str, &str)>
     };
 }
 
-pub fn start() {
-    unsafe {
-        ffi::emscripten_set_main_loop(ffi::hoge, 0, 0);
-    }
-}
-
-/// Safe rust wrapper for emscripten_run_script_int (basically, JS eval()).
-pub fn eval(x: &str) -> i32 {
-    let x = CString::new(x).unwrap();
-    let ptr = x.as_ptr();
-    unsafe { ffi::emscripten_run_script_int(ptr) }
-}
-
-// This is mostly standard Rust-C FFI stuff.
-mod ffi {
-    use libc::*;
-
-    extern "C" {
-        // This extern is defined in `html/library.js`.
-
-        // This extern is built in by Emscripten.
-        pub fn emscripten_run_script_int(x: *const c_char) -> c_int;
-        pub fn emscripten_set_main_loop(m: extern "C" fn(), fps: c_int, infinite: c_int);
-    }
-    pub extern "C" fn hoge() {
-        //println!("loop");
-    }
-}
