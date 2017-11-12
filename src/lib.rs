@@ -29,7 +29,8 @@ pub struct VirtualDOM {
     name: String,
     dom_type: DOMType,
     children: Vec<VirtualDOM>,
-    attributes: Vec<(String, String)>,
+    // attributes: Vec<(String, String)>,
+    attributes: Vec<Attribute>
 }
 
 pub enum DOMType {
@@ -39,9 +40,17 @@ pub enum DOMType {
     Component,
 }
 
-pub enum AttributeValue {
-    String(String),
-    Block(())
+
+pub enum Attribute {
+    String {
+        name: String,
+        value: String
+    },
+    bool {
+        name: String,
+        value: bool
+    }
+    // EventHandler()
 }
 
 impl fmt::Display for VirtualDOM {
@@ -119,15 +128,17 @@ impl Renderer {
     }
 }
 
-pub fn h(dom_type: DOMType, children: Vec<VirtualDOM>, attributes: Vec<(&str, &str)>) -> VirtualDOM {
+// pub fn h(dom_type: DOMType, children: Vec<VirtualDOM>, attributes: Vec<(&str, &str)>) -> VirtualDOM {
+pub fn h(dom_type: DOMType, children: Vec<VirtualDOM>, attributes: Vec<Attribute>) -> VirtualDOM {
     return VirtualDOM {
         name: dom_type.to_string(),
         dom_type: dom_type,
         children: children,
+        // attributes: attributes
+        //     .iter()
+        //     .map(|ref x| (x.0.to_string(), x.1.to_string()))
+        //     .collect::<Vec<_>>()
         attributes: attributes
-            .iter()
-            .map(|ref x| (x.0.to_string(), x.1.to_string()))
-            .collect::<Vec<_>>()
     };
 }
 
