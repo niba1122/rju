@@ -27,12 +27,12 @@ use std::fmt;
 
 pub struct VirtualDOM {
     name: String,
-    dom_type: Type,
+    dom_type: DOMType,
     children: Vec<VirtualDOM>,
     attributes: Vec<(String, String)>,
 }
 
-pub enum Type {
+pub enum DOMType {
     Element(&'static str),
     Text(&'static str),
     Comment,
@@ -54,19 +54,19 @@ impl fmt::Display for VirtualDOM {
     }
 }
 
-impl fmt::Display for Type {
+impl fmt::Display for DOMType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Type::Element(ref name) => {
+            DOMType::Element(ref name) => {
                 write!(f, "{}", name)
             },
-            Type::Text(ref string) => {
+            DOMType::Text(ref string) => {
                 write!(f, "{}", string)
             },
-            Type::Component => {
+            DOMType::Component => {
                 write!(f, "component")
             }
-            Type::Comment => {
+            DOMType::Comment => {
                 write!(f, "comment")
             }
         }
@@ -102,24 +102,24 @@ impl Renderer {
 
     fn render_dom(parent_dom: &Element, virtual_dom: &VirtualDOM) {
         match virtual_dom.dom_type {
-            Type::Element(ref name) => {
+            DOMType::Element(ref name) => {
                 let new_dom = document().create_element(&virtual_dom.name);
                 parent_dom.append_child(&new_dom);
                 for child in virtual_dom.children.iter() {
                    Renderer::render_dom(&new_dom, child);
                 }
             }
-            Type::Text(ref string) => {
+            DOMType::Text(ref string) => {
                 let new_dom = document().create_text_node(string);
                 parent_dom.append_child(&new_dom);
             }
-            Type::Component => {}
-            Type::Comment => {}
+            DOMType::Component => {}
+            DOMType::Comment => {}
         };
     }
 }
 
-pub fn h(dom_type: Type, children: Vec<VirtualDOM>, attributes: Vec<(&str, &str)>) -> VirtualDOM {
+pub fn h(dom_type: DOMType, children: Vec<VirtualDOM>, attributes: Vec<(&str, &str)>) -> VirtualDOM {
     return VirtualDOM {
         name: dom_type.to_string(),
         dom_type: dom_type,
