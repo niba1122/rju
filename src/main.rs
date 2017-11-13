@@ -6,10 +6,11 @@ use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM};
 use rju_macro::{html};
 
 fn main() {
+    let hogehoge = "hogehoge";
     let component = Component {
         parent_dom_id: "test",
         render: || -> VirtualDOM {
-            html!("
+            html!(r#"
                 <div>
                     <strong bind:attr='(1 + 2).to_string()' b:attr2='hogehoge'>
                         Hello World!!!!!!
@@ -17,11 +18,16 @@ fn main() {
                     <p>
                         Refactor!!!!!!!!!!!!
                     </p>
+                    <button on:click="test">add</button>
                 </div>
-            ")
+            "#)
         }
     };
     component.update()
+}
+
+fn test() {
+    println!("testtest!!!!!!!!!!!!!!!!!")
 }
 
 #[no_mangle]

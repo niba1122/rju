@@ -108,6 +108,8 @@ mod html_parser {
                         Some(ref prefix) => {
                             if prefix.eq("bind") {
                                 output.push_str(&format!("Attribute::String{{name:\"{}\",value:{}}}", name.local, value));
+                            } else if prefix.eq("on") {
+                                output.push_str(&format!("Attribute::EventHandler({})", value));
                             } else {
                                 output.push_str(&format!("Attribute::String{{name:\"{}:{}\",value:\"{}\".to_string()}}", prefix, name.local, value));
                             }
