@@ -82,13 +82,12 @@ impl fmt::Display for DOMType {
     }
 }
 
-pub struct Component<'a> {
-    // parent_dom: Box<Element>,
+pub struct Component<F> where F : Fn() -> VirtualDOM {
     pub parent_dom_id: &'static str,
-    pub render: &'a Fn() -> VirtualDOM
+    pub render: F
 }
 
-impl <'a>Component<'a> {
+impl <F>Component<F> where F : Fn() -> VirtualDOM {
     pub fn update(&self) {
         //root_dom.children = vec![self.render()]
         let new_virtual_dom = (self.render)();
