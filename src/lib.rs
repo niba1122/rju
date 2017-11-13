@@ -20,6 +20,10 @@ use stdweb::web::{
     window
 };
 
+use stdweb::web::event::{
+    ClickEvent
+};
+
 extern crate libc;
 
 use std::fmt;
@@ -51,6 +55,7 @@ pub enum Attribute {
         value: bool
     },
     // EventHandler()
+    EventHandler(fn())
 }
 
 impl fmt::Display for VirtualDOM {
@@ -116,6 +121,11 @@ impl Renderer {
                         },
                         Attribute::bool { name, ref value } => {
                         },
+                        Attribute::EventHandler(callback) => {
+                            new_dom.add_event_listener(move |_: ClickEvent| {
+                                callback();
+                            });
+                        }
                     }
                 }
                 parent_dom.append_child(&new_dom);
