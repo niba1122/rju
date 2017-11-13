@@ -82,34 +82,31 @@ impl fmt::Display for DOMType {
     }
 }
 
-// pub struct Component {
-//     root_dom: VirtualDOM,
-// }
-// impl Component {
-//     fn render(&self) -> VirtualDOM {
-//         VirtualDOM {
-//             name: "".to_string(),
-//             children: vec![],
-//             attributes: vec![],
-//         }
-//     }
-//     fn update(&self) {
-//         //root_dom.children = vec![self.render()]
-//     }
-// }
+pub struct Component<'a> {
+    // parent_dom: Box<Element>,
+    pub parent_dom_id: &'static str,
+    pub render: &'a Fn() -> VirtualDOM
+}
+
+impl <'a>Component<'a> {
+    pub fn update(&self) {
+        //root_dom.children = vec![self.render()]
+        let new_virtual_dom = (self.render)();
+        Renderer::patch(self.parent_dom_id, new_virtual_dom);
+    }
+}
 
 pub struct Renderer;
 impl Renderer {
     pub fn patch(dom_id: &str, virtual_dom: VirtualDOM) {
         stdweb::initialize();
-        // Renderer::render_dom(dom_id, &virtual_dom);
 
         let root_dom = document().get_element_by_id(dom_id).unwrap();
         Renderer::render_dom(&root_dom, &virtual_dom);
         stdweb::event_loop();
     }
 
-    fn render_dom(parent_dom: &Element, virtual_dom: &VirtualDOM) {
+    pub fn render_dom(parent_dom: &Element, virtual_dom: &VirtualDOM) {
         match virtual_dom.dom_type {
             DOMType::Element(ref name) => {
                 let new_dom = document().create_element(&virtual_dom.name);
