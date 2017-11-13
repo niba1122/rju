@@ -5,6 +5,8 @@ extern crate rju_macro;
 use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM};
 use rju_macro::{html};
 
+use std::cell::RefCell;
+
 
 struct State {
     hoge: String,
@@ -26,9 +28,6 @@ fn test() {
 }
 
 fn main() {
-    let mut count: i32 = 0;
-
-    let hogehoge = "hogehoge";
     let component = Component {
         parent_dom_id: "test",
         render: |ref component| -> VirtualDOM {
