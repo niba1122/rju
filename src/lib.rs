@@ -29,11 +29,15 @@ extern crate libc;
 use std::fmt;
 // use std::ffi::CString;
 
+use std::rc::*;
+use std::cell::*;
+
 pub struct VirtualDOM {
     name: String,
     dom_type: DOMType,
     children: Vec<VirtualDOM>,
     // attributes: Vec<(String, String)>,
+    // attributes: Vec<&'static Attribute>
     attributes: Vec<Attribute>
 }
 
@@ -44,7 +48,6 @@ pub enum DOMType {
     Component,
 }
 
-
 pub enum Attribute {
     String {
         name: &'static str,
@@ -54,8 +57,8 @@ pub enum Attribute {
         name: &'static str,
         value: bool
     },
-    // EventHandler()
     EventHandler(fn())
+    // EventHandler(Box<Fn() + 'static>)
 }
 
 impl fmt::Display for VirtualDOM {
@@ -115,7 +118,7 @@ impl Renderer {
             DOMType::Element(ref name) => {
                 let new_dom = document().create_element(&virtual_dom.name);
                 for attribute in virtual_dom.attributes.iter() {
-                    match *attribute {
+                    match *attribute.clone() {
                         Attribute::String { name, ref value } => {
                             new_dom.class_list().add(value)
                         },
