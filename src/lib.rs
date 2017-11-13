@@ -87,15 +87,15 @@ impl fmt::Display for DOMType {
     }
 }
 
-pub struct Component<F> where F : Fn() -> VirtualDOM {
+pub struct Component<F> where F : Fn(&Component<F>) -> VirtualDOM {
     pub parent_dom_id: &'static str,
     pub render: F
 }
 
-impl <F>Component<F> where F : Fn() -> VirtualDOM {
+impl <F>Component<F> where F : Fn(&Component<F>) -> VirtualDOM {
     pub fn update(&self) {
         //root_dom.children = vec![self.render()]
-        let new_virtual_dom = (self.render)();
+        let new_virtual_dom = (self.render)(self);
         Renderer::patch(self.parent_dom_id, new_virtual_dom);
     }
 }
