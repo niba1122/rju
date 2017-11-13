@@ -19,31 +19,26 @@ impl State {
     }
 }
 
-// fn add(&mut count) {
-//     count = count + 1
-// }
-
 fn test() {
-    println!("print!!!!!!!!!!!!!!!!!1");
+    println!("print!!!!!!!!!!!!!!!!!");
 }
 
 fn main() {
     let component = Component {
         parent_dom_id: "test",
-        render: |ref component| -> VirtualDOM {
-            component.update();
+        render: |component| -> VirtualDOM {
             html!(r#"
                 <div>
-                    <strong bind:attr='125.to_string()' b:attr2='hogehoge'>
+                    <strong bind:class='"foobar".to_string()'>
                         Hello World!!!!!!
                     </strong>
                     <p>
-                        Refactor!!!!!!!!!!!!
+                        nemuiyo!!!!!!!!!!!
                     </p>
                     <button on:click="test">add</button>
                 </div>
             "#)
-        }
+        },
     };
     component.update()
 }

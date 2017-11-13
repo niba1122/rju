@@ -134,15 +134,12 @@ mod html_parser {
         let dom_type: String = generate_type_string(&node.data);
         let attributes: String = generate_attributes_string(&node.data);
 
-        let result = format!(
+        format!(
             "h({}, {}, {})",
             dom_type,
             children,
             attributes
-        );
-
-        println!("{}", result);
-        result
+        )
     }
 
     pub fn parse<'a>(html: String) -> String {
@@ -151,6 +148,8 @@ mod html_parser {
         parser.process(str);
         let dom = parser.finish();
 
-        return generate_create_element_string(0, dom.document);
+        let render = generate_create_element_string(0, dom.document);
+        println!("{}", render);
+        render
     }
 }
