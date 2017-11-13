@@ -8,14 +8,14 @@ use rju_macro::{html};
 fn main() {
     let component = Component {
         parent_dom_id: "test",
-        render: &|| -> VirtualDOM {
+        render: || -> VirtualDOM {
             html!("
                 <div>
                     <strong bind:attr='(1 + 2).to_string()' b:attr2='hogehoge'>
                         Hello World!!!!!!
                     </strong>
                     <p>
-                        Component!!!!!!!!!!!!
+                        Refactor!!!!!!!!!!!!
                     </p>
                 </div>
             ")
