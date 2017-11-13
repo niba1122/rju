@@ -103,11 +103,6 @@ mod html_parser {
                         ref name,
                         ref value,
                     } = *attr;
-                    // output.push_str("(\"");
-                    // output.push_str(&*name.local);
-                    // output.push_str("\", \"");
-                    // output.push_str(value);
-                    // output.push_str("\")");
 
                     match name.prefix {
                         Some(ref prefix) => {
