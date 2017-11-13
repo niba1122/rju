@@ -5,7 +5,17 @@ extern crate rju_macro;
 use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM};
 use rju_macro::{html};
 
+
+struct State {
+    hoge: String;
+    fuga: i32;
+}
+
 fn main() {
+    let mut state = State {
+        hoge: "start!".to_string(),
+        fuga: 0
+    }
     let hogehoge = "hogehoge";
     let component = Component {
         parent_dom_id: "test",
