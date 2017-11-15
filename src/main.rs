@@ -12,77 +12,43 @@ use std::sync::RwLock;
 #[macro_use]
 extern crate lazy_static;
 
-fn add() {
-    // let mut h = hoge.write().unwrap();
-    // *h += 1;
-    component.update();
+#[derive(Hash)]
+pub struct OriginalComponent {
+    id: i32,
 }
 
-fn render() -> VirtualDOM {
-    let hoge2 = *hoge.read().unwrap();
-    let hoge_string = hoge2.to_string();
-    html!(r#"
-        <div>
-            <strong bind:class='hoge2.to_string()'>
-                Hello World!!!!!!
-            </strong>
-            <p>
-                nemukunaiyo!!!!!!!!!!!
-            </p>
-            <button on:click="add">Add</button>
-        </div>
-    "#)
-}
-
-lazy_static! {
-    static ref component: Component = {
-        let mut c = Component {
-            parent_dom_id: "test",
-            render: render,
-        };
-        c
-    };
-    static ref state: State = {
-        let mut s = State {
-            hoge: "aiueo".to_string(),
-            fuga: 0,
-            foo: RwLock::new(vec![])
-        };
-        s
-    };
-    static ref hoge: RwLock<i32> = {
-        let mut m = 0;
-        RwLock::new(m)
-    };
-}
-
-struct State {
-    hoge: String,
-    fuga: i32,
-    foo: RwLock<Vec<i32>>
-}
-
-impl State {
-    pub fn add(&mut self) {
-        self.fuga = self.fuga + 1
+trait IOriginalComponent : Component {
+    fn handle_click(&self) {
+        self.update()
     }
 }
 
-fn main() {
-    Renderer::initialize();
-    component.update();
-    Renderer::start();
+impl Component for OriginalComponent {
+    fn create() -> OriginalComponent {
+        OriginalComponent { id: 12345}
+    }
+    fn render(&self) -> VirtualDOM {
+        html!(r#"
+            <div>
+                <h1 bind:class='self.id.to_string()'>
+                    Hello World!
+                </h1>
+                <p>
+                    new component system!
+                </p>
+                <button>Add</button>
+            </div>
+        "#)
+    }
 }
 
+impl IOriginalComponent for OriginalComponent {}
+
+fn main() {
+    Renderer::render("test", OriginalComponent::create);
+}
 
 #[no_mangle]
 pub extern fn sum(a: i32, b: i32) -> i32 {
-    // println!("success: {}", html!("
-    //     <html>
-    //         <body>
-    //         <h1>Hello World</h1>
-    //     </body>
-    //   </html>
-    // "));
     a * b
 }
