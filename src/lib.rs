@@ -27,9 +27,9 @@ use stdweb::web::event::{
 extern crate libc;
 
 use std::fmt;
-// use std::ffi::CString;
 
-use std::sync::Mutex;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 
 pub struct VirtualDOM {
     name: String,
@@ -60,15 +60,15 @@ pub enum Attribute {
     // EventHandler(Box<Fn() + 'static>)
 }
 
-// impl fmt::Display for VirtualDOM {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         let mut children_string = String::new();
-//         for child in self.children.iter() {
-//             children_string.push_str(&format!("{}", child))
-//         }
-//         write!(f, "[{}({}){}]", self.name.to_string(), "", children_string)
-//     }
-// }
+impl fmt::Display for VirtualDOM {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut children_string = String::new();
+        for child in self.children.iter() {
+            children_string.push_str(&format!("{}", child))
+        }
+        write!(f, "[{}({}){}]", self.name.to_string(), "", children_string)
+    }
+}
 
 impl fmt::Display for DOMType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -89,55 +89,27 @@ impl fmt::Display for DOMType {
     }
 }
 
-pub struct Component {
-    pub parent_dom_id: &'static str,
-    // pub render: &'static Fn(&Component) -> VirtualDOM
-    // pub render: Box<Fn() -> VirtualDOM + Send>
-    pub render: fn() -> VirtualDOM
-}
-
-impl Component {
-    pub fn update(&self) {
-        //root_dom.children = vec![self.render()]
-        // let new_virtual_dom = (self.render)(self);
-        let new_virtual_dom = (self.render)();
-        Renderer::patch(self.parent_dom_id, new_virtual_dom);
-    }
-}
-
-pub trait Component2 {
-    fn new() {
-
-    }
+pub trait Component where Self : Hash {
+    fn create() -> Self;
     fn update(&self) {
-
+        let mut s = DefaultHasher::new();
+        let hash = self.hash(&mut s);
+        s.finish();
+        println!("{}", s.finish());
     }
     fn render(&self) -> VirtualDOM;
 }
 
-struct OriginalComponent {
-
-}
-
-
-trait IOriginalComponent : Component2 {
-
-}
-
-impl IOriginalComponent for OriginalComponent;
-
 pub struct Renderer;
 impl Renderer {
-    pub fn initialize() {
+    pub fn render<T>(dom_id: &str, factory: fn() -> T) where T : Component {
         stdweb::initialize();
-    }
-    pub fn start() {
-        stdweb::event_loop();
-    }
-    pub fn patch(dom_id: &str, virtual_dom: VirtualDOM) {
+        let component = factory();
+        let virtual_dom = component.render();
 
         let root_dom = document().get_element_by_id(dom_id).unwrap();
         Renderer::render_dom(&root_dom, &virtual_dom);
+        stdweb::event_loop();
     }
 
     pub fn render_dom(parent_dom: &Element, virtual_dom: &VirtualDOM) {
@@ -173,7 +145,6 @@ impl Renderer {
     }
 }
 
-// pub fn h(dom_type: DOMType, children: Vec<VirtualDOM>, attributes: Vec<(&str, &str)>) -> VirtualDOM {
 pub fn h(dom_type: DOMType, children: Vec<VirtualDOM>, attributes: Vec<Attribute>) -> VirtualDOM {
     return VirtualDOM {
         name: dom_type.to_string(),
@@ -182,4 +153,3 @@ pub fn h(dom_type: DOMType, children: Vec<VirtualDOM>, attributes: Vec<Attribute
         attributes: attributes
     };
 }
-
