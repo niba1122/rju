@@ -29,8 +29,7 @@ extern crate libc;
 use std::fmt;
 // use std::ffi::CString;
 
-use std::rc::*;
-use std::cell::*;
+use std::sync::Mutex;
 
 pub struct VirtualDOM {
     name: String,
@@ -61,15 +60,15 @@ pub enum Attribute {
     // EventHandler(Box<Fn() + 'static>)
 }
 
-impl fmt::Display for VirtualDOM {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut children_string = String::new();
-        for child in self.children.iter() {
-            children_string.push_str(&format!("{}", child))
-        }
-        write!(f, "[{}({}){}]", self.name.to_string(), "", children_string)
-    }
-}
+// impl fmt::Display for VirtualDOM {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         let mut children_string = String::new();
+//         for child in self.children.iter() {
+//             children_string.push_str(&format!("{}", child))
+//         }
+//         write!(f, "[{}({}){}]", self.name.to_string(), "", children_string)
+//     }
+// }
 
 impl fmt::Display for DOMType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -90,27 +89,34 @@ impl fmt::Display for DOMType {
     }
 }
 
-pub struct Component<F> where F : Fn(&Component<F>) -> VirtualDOM {
+pub struct Component {
     pub parent_dom_id: &'static str,
-    pub render: F
+    // pub render: &'static Fn(&Component) -> VirtualDOM
+    // pub render: Box<Fn() -> VirtualDOM + Send>
+    pub render: fn() -> VirtualDOM
 }
 
-impl <F>Component<F> where F : Fn(&Component<F>) -> VirtualDOM {
+impl Component {
     pub fn update(&self) {
         //root_dom.children = vec![self.render()]
-        let new_virtual_dom = (self.render)(self);
+        // let new_virtual_dom = (self.render)(self);
+        let new_virtual_dom = (self.render)();
         Renderer::patch(self.parent_dom_id, new_virtual_dom);
     }
 }
 
 pub struct Renderer;
 impl Renderer {
-    pub fn patch(dom_id: &str, virtual_dom: VirtualDOM) {
+    pub fn initialize() {
         stdweb::initialize();
+    }
+    pub fn start() {
+        stdweb::event_loop();
+    }
+    pub fn patch(dom_id: &str, virtual_dom: VirtualDOM) {
 
         let root_dom = document().get_element_by_id(dom_id).unwrap();
         Renderer::render_dom(&root_dom, &virtual_dom);
-        stdweb::event_loop();
     }
 
     pub fn render_dom(parent_dom: &Element, virtual_dom: &VirtualDOM) {
