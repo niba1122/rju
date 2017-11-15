@@ -105,6 +105,27 @@ impl Component {
     }
 }
 
+pub trait Component2 {
+    fn new() {
+
+    }
+    fn update(&self) {
+
+    }
+    fn render(&self) -> VirtualDOM;
+}
+
+struct OriginalComponent {
+
+}
+
+
+trait IOriginalComponent : Component2 {
+
+}
+
+impl IOriginalComponent for OriginalComponent;
+
 pub struct Renderer;
 impl Renderer {
     pub fn initialize() {
