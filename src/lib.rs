@@ -37,7 +37,7 @@ pub struct VirtualDOM {
     children: Vec<VirtualDOM>,
     // attributes: Vec<(String, String)>,
     // attributes: Vec<&'static Attribute>
-    attributes: Vec<Attribute>
+    attributes: Vec<Attribute>,
 }
 
 pub enum DOMType {
@@ -56,8 +56,8 @@ pub enum Attribute {
         name: &'static str,
         value: bool
     },
-    EventHandler(fn())
-    // EventHandler(Box<Fn() + 'static>)
+    // EventHandler(fn())
+    EventHandler(Box<Fn() + 'static>)
 }
 
 impl fmt::Display for VirtualDOM {
@@ -117,15 +117,19 @@ impl Renderer {
             DOMType::Element(ref name) => {
                 let new_dom = document().create_element(&virtual_dom.name);
                 for attribute in virtual_dom.attributes.iter() {
-                    match *attribute.clone() {
+                    match *attribute {
                         Attribute::String { name, ref value } => {
                             new_dom.class_list().add(value)
                         },
                         Attribute::bool { name, ref value } => {
                         },
-                        Attribute::EventHandler(callback) => {
+                        Attribute::EventHandler(ref callback) => {
+                            let ptr = callback as *const Box<Fn() + 'static>;
+                            // let ptr = *callback as *const Fn();
                             new_dom.add_event_listener(move |_: ClickEvent| {
-                                callback();
+                                
+                                let hoge = unsafe { &*ptr };
+                                hoge();
                             });
                         }
                     }
