@@ -5,9 +5,6 @@ extern crate rju_macro;
 use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM};
 use rju_macro::{html};
 
-use std::cell::RefCell;
-
-use std::sync::RwLock;
 
 #[macro_use]
 extern crate lazy_static;
@@ -23,11 +20,18 @@ trait IOriginalComponent : Component {
     }
 }
 
+struct State {
+    hoge: &'static str
+}
+
 impl Component for OriginalComponent {
     fn create() -> OriginalComponent {
-        OriginalComponent { id: 12345}
+        OriginalComponent {
+            id: 12345,
+        }
     }
     fn render(&self) -> VirtualDOM {
+        let hoge = &self;
         html!(r#"
             <div>
                 <h1 bind:class='self.id.to_string()'>
@@ -36,7 +40,7 @@ impl Component for OriginalComponent {
                 <p>
                     new component system!
                 </p>
-                <button>Add</button>
+                <button on:click='Box::new(||{println!("clicked!!!!!");})'>Add</button>
             </div>
         "#)
     }
