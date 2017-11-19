@@ -6,3 +6,4 @@ authors = ["Nobuhito Ibaraki <niba1122@gmail.com>"]
 [dependencies]
 libc = "0.2"
 stdweb = "*"
+lazy_static = "*"
