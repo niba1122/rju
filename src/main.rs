@@ -2,30 +2,42 @@
 extern crate rju;
 extern crate rju_macro;
 
-use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM};
+use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM, COMPONENTS};
 use rju_macro::{html};
 
 
 #[macro_use]
 extern crate lazy_static;
 
-pub fn render(id: i32) -> VirtualDOM {
+pub fn render(component_id: i32) -> VirtualDOM {
     let hoge = "hogestring".to_string();
+    let current_state = COMPONENTS.lock().unwrap().get_mut(&component_id).unwrap().state;
     html!(r#"
         <div>
-            <h1 bind:class='hoge'>
+            <h1 bind:class='current_state.to_string()'>
                 Hello World!
             </h1>
             <p>
                 new component system!
             </p>
+            <button on:click="handle_click">click me!</button>
         </div>
     "#)
 }
 
+fn handle_click(component_id: i32) {
+    let current_state = COMPONENTS.lock().unwrap().get_mut(&component_id).unwrap().state;
+    COMPONENTS.lock().unwrap().get_mut(&component_id).unwrap().set_state(current_state + 1);
+    COMPONENTS.lock().unwrap().get_mut(&component_id).unwrap().update();
+    println!("success{}", current_state);
+    // component.state = component.state + 1;
+    // component.update();
+}
+
 fn factory() -> Component {
     Component {
-        render: render
+        render: render,
+        state: 0
     }
 }
 
