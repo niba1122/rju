@@ -56,8 +56,8 @@ pub enum Attribute {
         name: &'static str,
         value: bool
     },
-    // EventHandler(fn())
-    EventHandler(Box<Fn() + 'static>)
+    EventHandler(fn(&Component))
+    // EventHandler(Box<Fn() + 'static>)
 }
 
 impl fmt::Display for VirtualDOM {
