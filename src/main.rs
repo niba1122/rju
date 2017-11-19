@@ -18,7 +18,8 @@ pub fn render(component_id: i32) -> VirtualDOM {
                 Hello World!
             </h1>
             <p>
-                new component system!
+                count: {current_state}<br />
+                hoge: {hoge}
             </p>
             <button on:click="handle_click">click me!</button>
         </div>
@@ -30,8 +31,6 @@ fn handle_click(component_id: i32) {
     COMPONENTS.lock().unwrap().get_mut(&component_id).unwrap().set_state(current_state + 1);
     COMPONENTS.lock().unwrap().get_mut(&component_id).unwrap().update();
     println!("success{}", current_state);
-    // component.state = component.state + 1;
-    // component.update();
 }
 
 fn factory() -> Component {

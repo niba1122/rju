@@ -48,7 +48,26 @@ mod html_parser {
             }
 
             NodeData::Text { ref contents } => {
-                format!("DOMType::Text(\"{}\")", contents.borrow())
+                let contents_string = contents.borrow().to_string();
+                let mut embed = false;
+                let mut new_string = String::new();
+                let mut variables: Vec<String> = vec![];
+                for c in contents_string.chars() {
+                    if c == '}' {
+                        embed = false
+                    }
+                    if embed {
+                        variables.last_mut().unwrap().push(c);
+                    } else {
+                        new_string.push(c);
+                    }
+                    if c == '{' {
+                        embed = true;
+                        variables.push(String::new());
+                    }               
+                }
+                println!("DOMType::Text(format!(\"{}\",{}))", new_string, variables.join(","));
+                format!("DOMType::Text(format!(\"{}\",{}))", new_string, variables.join(","))
             }
 
             NodeData::Comment { ref contents } => {
