@@ -2,7 +2,7 @@
 extern crate rju;
 extern crate rju_macro;
 
-use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM};
+use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM, ComponentFactory};
 use rju_macro::{html};
 
 
@@ -14,22 +14,7 @@ pub struct OriginalComponent {
     id: i32,
 }
 
-trait IOriginalComponent : Component {
-    fn handle_click(&self) {
-        self.update()
-    }
-}
-
-struct State {
-    hoge: &'static str
-}
-
 impl Component for OriginalComponent {
-    fn create() -> OriginalComponent {
-        OriginalComponent {
-            id: 12345,
-        }
-    }
     fn render(&self) -> VirtualDOM {
         let hoge = &self;
         html!(r#"
@@ -46,10 +31,15 @@ impl Component for OriginalComponent {
     }
 }
 
-impl IOriginalComponent for OriginalComponent {}
+pub struct OriginalComponentFactory {}
+impl ComponentFactory<OriginalComponent> for OriginalComponentFactory {
+    fn create() -> OriginalComponent {
+        OriginalComponent{id: 10}
+    }
+}
 
 fn main() {
-    Renderer::render("test", OriginalComponent::create);
+    Renderer::render("test", OriginalComponentFactory::create);
 }
 
 #[no_mangle]
