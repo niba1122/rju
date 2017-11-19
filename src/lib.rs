@@ -89,15 +89,15 @@ impl fmt::Display for DOMType {
     }
 }
 
-pub trait Component where Self : Hash {
-    fn create() -> Self;
+pub trait Component {
     fn update(&self) {
-        let mut s = DefaultHasher::new();
-        let hash = self.hash(&mut s);
-        s.finish();
-        println!("{}", s.finish());
+        println!("{:p}", &self);
     }
     fn render(&self) -> VirtualDOM;
+}
+
+pub trait ComponentFactory<T> where T : Component {
+    fn create() -> T;
 }
 
 pub struct Renderer;
