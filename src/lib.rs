@@ -28,29 +28,19 @@ use stdweb::web::event::{
 extern crate libc;
 
 use std::fmt;
-use std::rc::{Rc};
-
-use std::any::Any;
-
 use std::sync::Mutex;
 
 #[macro_use]
 extern crate lazy_static;
 use std::collections::HashMap;
 lazy_static! {
-    static ref COMPONENTS: Mutex<HashMap<&'static str, Component>> = Mutex::new(HashMap::new());
-    // static ref HASHMAP: Vec<Component> = {
-    //     let mut m = vec![];
-    //     m
-    // };
+    pub static ref COMPONENTS: Mutex<HashMap<i32, Component>> = Mutex::new(HashMap::new());
 }
 
 pub struct VirtualDOM {
     name: String,
     dom_type: DOMType,
     children: Vec<VirtualDOM>,
-    // attributes: Vec<(String, String)>,
-    // attributes: Vec<&'static Attribute>
     attributes: Vec<Attribute>,
 }
 
@@ -105,10 +95,17 @@ impl fmt::Display for DOMType {
 
 pub struct Component {
     pub render: fn(i32) -> VirtualDOM,
+    pub state: i32
 }
 impl Component {
-    fn update(&self) {
-        (self.render)(10);
+    pub fn update(&self) {
+        let virtual_dom = (self.render)(1);
+        let root_dom = document().get_element_by_id("test").unwrap();
+        root_dom.set_text_content("");
+        Renderer::render_dom(&root_dom, &virtual_dom, 1)
+    }
+    pub fn set_state(&mut self, state: i32) {
+        self.state = state;
     }
 }
 
@@ -116,20 +113,16 @@ pub struct Renderer;
 impl Renderer {
     pub fn render(dom_id: &str, factory: fn() -> Component) {
         stdweb::initialize();
-        let component = factory();
-        let virtual_dom = (component.render)(10);
 
-        // let mut hashmap = COMPONENTS.;
-        // hashmap.insert("hoge", component);
-        // COMPONENTS.insert("hoge", component);
-        COMPONENTS.lock().unwrap().insert("hoge", component);
+        COMPONENTS.lock().unwrap().insert(1, factory());
 
         let root_dom = document().get_element_by_id(dom_id).unwrap();
-        Renderer::render_dom(&root_dom, &virtual_dom, COMPONENTS.lock().unwrap().get("hoge").unwrap());
+        let virtual_dom = (COMPONENTS.lock().unwrap().get(&1).unwrap().render)(1);
+        Renderer::render_dom(&root_dom, &virtual_dom, 1);
         stdweb::event_loop();
     }
 
-    pub fn render_dom(parent_dom: &Element, virtual_dom: &VirtualDOM, component: &Component) {
+    pub fn render_dom(parent_dom: &Element, virtual_dom: &VirtualDOM, component_id: i32) {
         match virtual_dom.dom_type {
             DOMType::Element(ref name) => {
                 let new_dom = document().create_element(&virtual_dom.name);
@@ -141,18 +134,15 @@ impl Renderer {
                         Attribute::bool { name, ref value } => {
                         },
                         Attribute::EventHandler(callback) => {
-
-                            // let ptr = Renderer::to_unsafe(component) as *const T;
                             new_dom.add_event_listener(move |_: ClickEvent| {
-                                // let hoge = unsafe { &*ptr };
-                                callback(10);
+                                callback(component_id);
                             });
                         }
                     }
                 }
                 parent_dom.append_child(&new_dom);
                 for child in virtual_dom.children.iter() {
-                   Renderer::render_dom(&new_dom, child, component);
+                   Renderer::render_dom(&new_dom, child, component_id);
                 }
             }
             DOMType::Text(ref string) => {
