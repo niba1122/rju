@@ -46,7 +46,7 @@ pub struct VirtualDOM {
 
 pub enum DOMType {
     Element(&'static str),
-    Text(&'static str),
+    Text(String),
     Comment,
     Component,
 }
