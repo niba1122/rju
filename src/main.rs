@@ -24,14 +24,18 @@ impl State for MainState {
 
 pub fn render(component: Arc<Mutex<Component>>) -> VirtualDOM {
     let hoge = "hogestring".to_string();
-    let current_state: i32 = component.lock().unwrap().state.as_any().downcast_ref::<MainState>().unwrap().count;
+    let mut count: i32 = 0;
+    component.lock().unwrap().state.as_any().downcast_ref::<MainState>().map(|s| {
+        count = s.count;
+        s
+    });
     html!(r#"
         <div>
-            <h1 bind:class='current_state.to_string()'>
+            <h1 bind:class='count.to_string()'>
                 Hello World!
             </h1>
             <p>
-                count: {current_state}<br />
+                count: {count.to_string()}<br />
                 hoge: {hoge}
             </p>
             <button on:click="handle_click">click me!</button>
