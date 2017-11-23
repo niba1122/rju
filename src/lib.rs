@@ -28,13 +28,18 @@ use stdweb::web::event::{
 extern crate libc;
 
 use std::fmt;
-use std::sync::Mutex;
+pub use std::sync::Mutex;
+pub use std::sync::Arc;
 
 #[macro_use]
 extern crate lazy_static;
 use std::collections::HashMap;
 lazy_static! {
-    pub static ref COMPONENTS: Mutex<HashMap<i32, Component>> = Mutex::new(HashMap::new());
+    static ref COMPONENTS: Mutex<HashMap<i32, Arc<Mutex<Component>>>> = Mutex::new(HashMap::new());
+}
+
+fn get_component(component_id: i32) -> Arc<Mutex<Component>> {
+    Arc::clone(COMPONENTS.lock().unwrap().get_mut(&component_id).unwrap())
 }
 
 pub struct VirtualDOM {
@@ -60,7 +65,7 @@ pub enum Attribute {
         name: &'static str,
         value: bool
     },
-    EventHandler(fn(i32))
+    EventHandler(fn(Arc<Mutex<Component>>))
     // EventHandler(Box<Fn() + 'static>)
 }
 
@@ -94,12 +99,12 @@ impl fmt::Display for DOMType {
 }
 
 pub struct Component {
-    pub render: fn(i32) -> VirtualDOM,
+    pub render: fn(Arc<Mutex<Component>>) -> VirtualDOM,
     pub state: i32
 }
 impl Component {
     pub fn update(&self) {
-        let virtual_dom = (self.render)(1);
+        let virtual_dom = (self.render)(get_component(1));
         let root_dom = document().get_element_by_id("test").unwrap();
         root_dom.set_text_content("");
         Renderer::render_dom(&root_dom, &virtual_dom, 1)
@@ -114,10 +119,16 @@ impl Renderer {
     pub fn render(dom_id: &str, factory: fn() -> Component) {
         stdweb::initialize();
 
-        COMPONENTS.lock().unwrap().insert(1, factory());
+        // COMPONENTS.lock().unwrap().insert(1, factory());
 
+        // let root_dom = document().get_element_by_id(dom_id).unwrap();
+        // let virtual_dom = (COMPONENTS.lock().unwrap().get(&1).unwrap().render)(1);
+
+        COMPONENTS.lock().unwrap().insert(1, Arc::new(Mutex::new(factory())));
+        let mut component = get_component(1);
         let root_dom = document().get_element_by_id(dom_id).unwrap();
-        let virtual_dom = (COMPONENTS.lock().unwrap().get(&1).unwrap().render)(1);
+        let virtual_dom = (component.lock().unwrap().render)(get_component(1));
+
         Renderer::render_dom(&root_dom, &virtual_dom, 1);
         stdweb::event_loop();
     }
@@ -135,7 +146,7 @@ impl Renderer {
                         },
                         Attribute::EventHandler(callback) => {
                             new_dom.add_event_listener(move |_: ClickEvent| {
-                                callback(component_id);
+                                callback(get_component(component_id));
                             });
                         }
                     }
