@@ -2,16 +2,18 @@
 extern crate rju;
 extern crate rju_macro;
 
-use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM, COMPONENTS};
+use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM};
 use rju_macro::{html};
 
+pub use std::sync::Mutex;
+pub use std::sync::Arc;
 
 #[macro_use]
 extern crate lazy_static;
 
-pub fn render(component_id: i32) -> VirtualDOM {
+pub fn render(component: Arc<Mutex<Component>>) -> VirtualDOM {
     let hoge = "hogestring".to_string();
-    let current_state = COMPONENTS.lock().unwrap().get_mut(&component_id).unwrap().state;
+    let current_state = component.lock().unwrap().state;
     html!(r#"
         <div>
             <h1 bind:class='current_state.to_string()'>
@@ -26,11 +28,10 @@ pub fn render(component_id: i32) -> VirtualDOM {
     "#)
 }
 
-fn handle_click(component_id: i32) {
-    let current_state = COMPONENTS.lock().unwrap().get_mut(&component_id).unwrap().state;
-    COMPONENTS.lock().unwrap().get_mut(&component_id).unwrap().set_state(current_state + 1);
-    COMPONENTS.lock().unwrap().get_mut(&component_id).unwrap().update();
-    println!("success{}", current_state);
+fn handle_click(component: Arc<Mutex<Component>>) {
+    let current_state = component.lock().unwrap().state;
+    component.lock().unwrap().set_state(current_state + 1);
+    component.lock().unwrap().update();
 }
 
 fn factory() -> Component {
