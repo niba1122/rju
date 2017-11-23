@@ -30,6 +30,7 @@ extern crate libc;
 use std::fmt;
 pub use std::sync::Mutex;
 pub use std::sync::Arc;
+pub use std::any::Any;
 
 #[macro_use]
 extern crate lazy_static;
@@ -100,7 +101,7 @@ impl fmt::Display for DOMType {
 
 pub struct Component {
     pub render: fn(Arc<Mutex<Component>>) -> VirtualDOM,
-    pub state: i32
+    pub state: Box<State>
 }
 impl Component {
     pub fn update(&self) {
@@ -109,9 +110,13 @@ impl Component {
         root_dom.set_text_content("");
         Renderer::render_dom(&root_dom, &virtual_dom, 1)
     }
-    pub fn set_state(&mut self, state: i32) {
+    pub fn set_state(&mut self, state: Box<State>) {
         self.state = state;
     }
+}
+
+pub trait State : Send {
+    fn as_any(&self) -> &Any;
 }
 
 pub struct Renderer;
