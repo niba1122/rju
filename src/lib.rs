@@ -124,13 +124,8 @@ impl Renderer {
     pub fn render(dom_id: &str, factory: fn() -> Component) {
         stdweb::initialize();
 
-        // COMPONENTS.lock().unwrap().insert(1, factory());
-
-        // let root_dom = document().get_element_by_id(dom_id).unwrap();
-        // let virtual_dom = (COMPONENTS.lock().unwrap().get(&1).unwrap().render)(1);
-
         COMPONENTS.lock().unwrap().insert(1, Arc::new(Mutex::new(factory())));
-        let mut component = get_component(1);
+        let component = get_component(1);
         let root_dom = document().get_element_by_id(dom_id).unwrap();
         let virtual_dom = (component.lock().unwrap().render)(get_component(1));
 
