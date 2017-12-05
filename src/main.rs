@@ -17,7 +17,7 @@ struct MainState {
 }
 
 impl State for MainState {
-    fn as_any(&self) -> &Any {
+    fn as_any(&mut self) -> &mut Any {
         self
     }
 }
@@ -25,17 +25,16 @@ impl State for MainState {
 pub fn render(component: Arc<Mutex<Component>>) -> VirtualDOM {
     let hoge = "hogestring".to_string();
     let mut count: i32 = 0;
-    component.lock().unwrap().state.as_any().downcast_ref::<MainState>().map(|s| {
-        count = s.count;
-        s
-    });
+    let mut c = component.lock().unwrap();
+    let mut sa = c.state.lock().unwrap();
+    let mut s = sa.as_any().downcast_mut::<MainState>().unwrap();
     html!(r#"
         <div>
-            <h1 bind:class='count.to_string()'>
+            <h1 bind:class='s2.count.to_string()'>
                 Hello World!
             </h1>
             <p>
-                count: {count.to_string()}<br />
+                count: {s2.count.to_string()}<br />
                 hoge: {hoge}
             </p>
             <button on:click="handle_click">click me!</button>
@@ -44,19 +43,19 @@ pub fn render(component: Arc<Mutex<Component>>) -> VirtualDOM {
 }
 
 fn handle_click(component: Arc<Mutex<Component>>) {
-    let current_state = component.lock().unwrap().state.as_any().downcast_ref::<MainState>().unwrap().count;
-    component.lock().unwrap().set_state(Box::new(MainState {
-        count: current_state + 1
-    }));
+    let mut c = component.lock().unwrap();
+    let mut sa = c.state.lock().unwrap();
+    let mut s = sa.as_any().downcast_mut::<MainState>().unwrap();
+    s.count = s.count + 3;
     component.lock().unwrap().update();
 }
 
 fn factory() -> Component {
     Component {
         render: render,
-        state: Box::new(MainState {
+        state: Arc::new(Mutex::new(MainState {
             count: 0
-        })
+        }))
     }
 }
 
