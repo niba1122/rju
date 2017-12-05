@@ -101,7 +101,7 @@ impl fmt::Display for DOMType {
 
 pub struct Component {
     pub render: fn(Arc<Mutex<Component>>) -> VirtualDOM,
-    pub state: Box<State>
+    pub state: Arc<Mutex<State>>
 }
 impl Component {
     pub fn update(&self) {
@@ -110,13 +110,13 @@ impl Component {
         root_dom.set_text_content("");
         Renderer::render_dom(&root_dom, &virtual_dom, 1)
     }
-    pub fn set_state(&mut self, state: Box<State>) {
+    pub fn set_state(&mut self, state: Arc<Mutex<State>>) {
         self.state = state;
     }
 }
 
 pub trait State : Send {
-    fn as_any(&self) -> &Any;
+    fn as_any(&mut self) -> &mut Any;
 }
 
 pub struct Renderer;
