@@ -7,3 +7,4 @@ authors = ["Nobuhito Ibaraki <niba1122@gmail.com>"]
 libc = "0.2"
 stdweb = "*"
 lazy_static = "*"
+rand = "0.3"

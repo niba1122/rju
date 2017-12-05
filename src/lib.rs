@@ -15,20 +15,24 @@ use stdweb::web::event::{
 };
 
 extern crate libc;
+extern crate rand;
 
 use std::fmt;
 pub use std::sync::Mutex;
 pub use std::sync::Arc;
 pub use std::any::Any;
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
+use rand::Rng;
 
 #[macro_use]
 extern crate lazy_static;
 use std::collections::HashMap;
 lazy_static! {
-    static ref COMPONENTS: Mutex<HashMap<i32, Arc<Mutex<Component>>>> = Mutex::new(HashMap::new());
+    static ref COMPONENTS: Mutex<HashMap<u64, Arc<Mutex<Component>>>> = Mutex::new(HashMap::new());
 }
 
-fn get_component(component_id: i32) -> Arc<Mutex<Component>> {
+fn get_component(component_id: u64) -> Arc<Mutex<Component>> {
     Arc::clone(COMPONENTS.lock().unwrap().get_mut(&component_id).unwrap())
 }
 
@@ -90,14 +94,16 @@ impl fmt::Display for DOMType {
 
 pub struct Component {
     pub render: fn(Arc<Mutex<Component>>) -> VirtualDOM,
-    pub state: Arc<Mutex<State>>
+    pub state: Arc<Mutex<State>>,
+    // TODO: id private
+    pub id: u64
 }
 impl Component {
     pub fn update(&self) {
-        let virtual_dom = (self.render)(get_component(1));
+        let virtual_dom = (self.render)(get_component(self.id));
         let root_dom = document().get_element_by_id("test").unwrap();
         root_dom.set_text_content("");
-        Renderer::render_dom(&root_dom, &virtual_dom, 1)
+        Renderer::render_dom(&root_dom, &virtual_dom, self.id)
     }
     pub fn set_state(&mut self, state: Arc<Mutex<State>>) {
         self.state = state;
@@ -110,19 +116,20 @@ pub trait State : Send {
 
 pub struct Renderer;
 impl Renderer {
-    pub fn render(dom_id: &str, factory: fn() -> Component) {
+    pub fn render(dom_id: &str, factory: fn(u64) -> Component) {
         stdweb::initialize();
 
-        COMPONENTS.lock().unwrap().insert(1, Arc::new(Mutex::new(factory())));
-        let component = get_component(1);
+        let id = Renderer::generate_id();
+        let component_ref = Arc::new(Mutex::new(factory(id)));
         let root_dom = document().get_element_by_id(dom_id).unwrap();
-        let virtual_dom = (component.lock().unwrap().render)(get_component(1));
+        let virtual_dom = (component_ref.lock().unwrap().render)(component_ref.clone());
 
-        Renderer::render_dom(&root_dom, &virtual_dom, 1);
+        COMPONENTS.lock().unwrap().insert(id, component_ref.clone());
+        Renderer::render_dom(&root_dom, &virtual_dom, id);
         stdweb::event_loop();
     }
 
-    pub fn render_dom(parent_dom: &Element, virtual_dom: &VirtualDOM, component_id: i32) {
+    pub fn render_dom(parent_dom: &Element, virtual_dom: &VirtualDOM, component_id: u64) {
         match virtual_dom.dom_type {
             DOMType::Element(ref name) => {
                 let new_dom = document().create_element(&virtual_dom.name);
@@ -152,6 +159,14 @@ impl Renderer {
             DOMType::Component => {}
             DOMType::Comment => {}
         };
+    }
+
+    fn generate_id() -> u64 {
+        let mut rng = rand::thread_rng();
+        let mut hasher = DefaultHasher::new();
+        let random_u64 = rng.gen::<u64>();
+        random_u64.hash(&mut hasher);
+        hasher.finish()
     }
 }
 
