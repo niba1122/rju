@@ -2,12 +2,8 @@
 extern crate rju;
 extern crate rju_macro;
 
-use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM, State};
+use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM, State, Mutex, Arc, Any};
 use rju_macro::{html};
-
-use std::sync::Mutex;
-use std::sync::Arc;
-use std::any::Any;
 
 #[macro_use]
 extern crate lazy_static;
@@ -23,19 +19,17 @@ impl State for MainState {
 }
 
 pub fn render(component: Arc<Mutex<Component>>) -> VirtualDOM {
-    let hoge = "hogestring".to_string();
     let mut count: i32 = 0;
     let mut c = component.lock().unwrap();
     let mut sa = c.state.lock().unwrap();
     let mut s = sa.as_any().downcast_mut::<MainState>().unwrap();
     html!(r#"
         <div>
-            <h1 bind:class='s2.count.to_string()'>
+            <h1 bind:class='s.count.to_string()'>
                 Hello World!
             </h1>
             <p>
-                count: {s2.count.to_string()}<br />
-                hoge: {hoge}
+                count: {s.count.to_string()}<br />
             </p>
             <button on:click="handle_click">click me!</button>
         </div>
