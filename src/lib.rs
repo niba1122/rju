@@ -92,11 +92,14 @@ impl fmt::Display for DOMType {
     }
 }
 
+pub struct InitialComponent {
+    pub render: fn(Arc<Mutex<Component>>) -> VirtualDOM,
+    pub state: Arc<Mutex<State>>,
+}
 pub struct Component {
     pub render: fn(Arc<Mutex<Component>>) -> VirtualDOM,
     pub state: Arc<Mutex<State>>,
-    // TODO: id private
-    pub id: u64
+    id: u64
 }
 impl Component {
     pub fn update(&self) {
@@ -116,11 +119,17 @@ pub trait State : Send {
 
 pub struct Renderer;
 impl Renderer {
-    pub fn render(dom_id: &str, factory: fn(u64) -> Component) {
+    pub fn render(dom_id: &str, factory: fn() -> InitialComponent) {
         stdweb::initialize();
 
         let id = Renderer::generate_id();
-        let component_ref = Arc::new(Mutex::new(factory(id)));
+        let initial_component = factory();
+        let component = Component {
+            render: initial_component.render,
+            state: initial_component.state,
+            id: id,
+        };
+        let component_ref = Arc::new(Mutex::new(component));
         let root_dom = document().get_element_by_id(dom_id).unwrap();
         let virtual_dom = (component_ref.lock().unwrap().render)(component_ref.clone());
 
