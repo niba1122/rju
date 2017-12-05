@@ -49,13 +49,14 @@ fn handle_click(component: Arc<Mutex<Component>>) {
     component.lock().unwrap().update();
 }
 
-fn factory() -> Component {
+fn factory(id: u64) -> Component {
     Component {
         render: render,
         state: Arc::new(Mutex::new(MainState {
             count: 0,
             text: String::from("hoge")
-        }))
+        })),
+        id: id
     }
 }
 
