@@ -2,7 +2,7 @@
 extern crate rju;
 extern crate rju_macro;
 
-use rju::{h, Renderer, DOMType, Attribute, Component, VirtualDOM, State, Mutex, Arc, Any};
+use rju::{h, Renderer, DOMType, Attribute, Component, InitialComponent, VirtualDOM, State, Mutex, Arc, Any};
 use rju_macro::{html};
 
 #[macro_use]
@@ -49,14 +49,13 @@ fn handle_click(component: Arc<Mutex<Component>>) {
     component.lock().unwrap().update();
 }
 
-fn factory(id: u64) -> Component {
-    Component {
+fn factory() -> InitialComponent {
+    InitialComponent {
         render: render,
         state: Arc::new(Mutex::new(MainState {
             count: 0,
             text: String::from("hoge")
         })),
-        id: id
     }
 }
 
