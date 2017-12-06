@@ -79,7 +79,18 @@ mod html_parser {
                 ref attrs,
                 ..
             } => {
-                format!("DOMType::Element(\"{}\")", name.local.to_string())
+                match name.prefix {
+                    Some(ref prefix) => {
+                        if prefix.eq("component") {
+                            format!("DOMType::Component({})", name.local)
+                        } else {
+                            format!("DOMType::Element(\"{}\")", name.local)
+                        }
+                    }
+                    None => {
+                        format!("DOMType::Element(\"{}\")", name.local)
+                    }
+                }
             }
 
             NodeData::ProcessingInstruction { .. } => unreachable!(),
