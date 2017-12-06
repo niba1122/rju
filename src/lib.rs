@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate stdweb;
 use stdweb::web::{
     IEventTarget,
@@ -47,7 +48,7 @@ pub enum DOMType {
     Element(&'static str),
     Text(String),
     Comment,
-    Component,
+    Component(fn() -> InitialComponent)
 }
 
 pub enum Attribute {
@@ -82,7 +83,7 @@ impl fmt::Display for DOMType {
             DOMType::Text(ref string) => {
                 write!(f, "{}", string)
             },
-            DOMType::Component => {
+            DOMType::Component(factory) => {
                 write!(f, "component")
             }
             DOMType::Comment => {
@@ -96,10 +97,11 @@ pub struct InitialComponent {
     pub render: fn(Arc<Mutex<Component>>) -> VirtualDOM,
     pub state: Arc<Mutex<State>>,
 }
+
 pub struct Component {
+    id: u64,
     pub render: fn(Arc<Mutex<Component>>) -> VirtualDOM,
-    pub state: Arc<Mutex<State>>,
-    id: u64
+    pub state: Arc<Mutex<State>>
 }
 impl Component {
     pub fn update(&self) {
@@ -125,9 +127,9 @@ impl Renderer {
         let id = Renderer::generate_id();
         let initial_component = factory();
         let component = Component {
+            id: id,
             render: initial_component.render,
             state: initial_component.state,
-            id: id,
         };
         let component_ref = Arc::new(Mutex::new(component));
         let root_dom = document().get_element_by_id(dom_id).unwrap();
@@ -142,6 +144,10 @@ impl Renderer {
         match virtual_dom.dom_type {
             DOMType::Element(ref name) => {
                 let new_dom = document().create_element(&virtual_dom.name);
+                let dom_id = Renderer::generate_id().to_string();
+                js! {
+                    @{&new_dom}.id = @{&dom_id};
+                }
                 for attribute in virtual_dom.attributes.iter() {
                     match *attribute {
                         Attribute::String { name, ref value } => {
@@ -165,7 +171,16 @@ impl Renderer {
                 let new_dom = document().create_text_node(string);
                 parent_dom.append_child(&new_dom);
             }
-            DOMType::Component => {}
+            DOMType::Component(ref factory) => {
+                let hoge = factory();
+                let new_dom = document().create_element(&virtual_dom.name);
+                let dom_id = Renderer::generate_id().to_string();
+                js! {
+                    @{&new_dom}.id = @{&dom_id};
+                }
+                parent_dom.append_child(&new_dom);
+                Renderer::render(&dom_id, *factory);
+            }
             DOMType::Comment => {}
         };
     }
