@@ -1,0 +1,12 @@
+[package]
+name = "rju_macro"
+version = "0.1.0"
+authors = ["Nobuhito Ibaraki <niba1122@gmail.com>"]
+
+[dependencies]
+xml5ever = "*"
+rju = { path = "../rju" }
+lazy_static = "*"
+
+[lib]
+proc-macro = true
