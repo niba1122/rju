@@ -42,6 +42,7 @@ pub struct VirtualDOM {
     dom_type: DOMType,
     children: Vec<VirtualDOM>,
     attributes: Vec<Attribute>,
+    dom_id: Option<u64>
 }
 
 pub enum DOMType {
@@ -101,14 +102,15 @@ pub struct InitialComponent {
 pub struct Component {
     id: u64,
     pub render: fn(Arc<Mutex<Component>>) -> VirtualDOM,
-    pub state: Arc<Mutex<State>>
+    pub state: Arc<Mutex<State>>,
+    dom_id: String
 }
 impl Component {
     pub fn update(&self) {
-        let virtual_dom = (self.render)(get_component(self.id));
-        let root_dom = document().get_element_by_id("test").unwrap();
+        let mut virtual_dom = (self.render)(get_component(self.id));
+        let root_dom = document().get_element_by_id(&self.dom_id).unwrap();
         root_dom.set_text_content("");
-        Renderer::render_dom(&root_dom, &virtual_dom, self.id)
+        Renderer::render_dom(&root_dom, &mut virtual_dom, self.id)
     }
     pub fn set_state(&mut self, state: Arc<Mutex<State>>) {
         self.state = state;
@@ -124,29 +126,36 @@ impl Renderer {
     pub fn render(dom_id: &str, factory: fn() -> InitialComponent) {
         stdweb::initialize();
 
+        Renderer::_render(dom_id, factory);
+
+        stdweb::event_loop();
+    }
+
+    fn _render(dom_id: &str, factory: fn() -> InitialComponent) {
         let id = Renderer::generate_id();
         let initial_component = factory();
         let component = Component {
             id: id,
             render: initial_component.render,
             state: initial_component.state,
+            dom_id: dom_id.to_string()
         };
         let component_ref = Arc::new(Mutex::new(component));
         let root_dom = document().get_element_by_id(dom_id).unwrap();
-        let virtual_dom = (component_ref.lock().unwrap().render)(component_ref.clone());
+        let mut virtual_dom = (component_ref.lock().unwrap().render)(component_ref.clone());
 
         COMPONENTS.lock().unwrap().insert(id, component_ref.clone());
-        Renderer::render_dom(&root_dom, &virtual_dom, id);
-        stdweb::event_loop();
+        Renderer::render_dom(&root_dom, &mut virtual_dom, id);
     }
 
-    pub fn render_dom(parent_dom: &Element, virtual_dom: &VirtualDOM, component_id: u64) {
+    pub fn render_dom(parent_dom: &Element, virtual_dom: &mut VirtualDOM, component_id: u64) {
         match virtual_dom.dom_type {
             DOMType::Element(ref name) => {
                 let new_dom = document().create_element(&virtual_dom.name);
-                let dom_id = Renderer::generate_id().to_string();
+                let dom_id = Renderer::generate_id();
+                virtual_dom.dom_id = Some(dom_id);
                 js! {
-                    @{&new_dom}.id = @{&dom_id};
+                    @{&new_dom}.id = @{dom_id.to_string()};
                 }
                 for attribute in virtual_dom.attributes.iter() {
                     match *attribute {
@@ -163,8 +172,8 @@ impl Renderer {
                     }
                 }
                 parent_dom.append_child(&new_dom);
-                for child in virtual_dom.children.iter() {
-                   Renderer::render_dom(&new_dom, child, component_id);
+                for child in &mut virtual_dom.children {
+                   Renderer::render_dom(&new_dom, &mut *child, component_id);
                 }
             }
             DOMType::Text(ref string) => {
@@ -172,14 +181,13 @@ impl Renderer {
                 parent_dom.append_child(&new_dom);
             }
             DOMType::Component(ref factory) => {
-                let hoge = factory();
                 let new_dom = document().create_element(&virtual_dom.name);
                 let dom_id = Renderer::generate_id().to_string();
                 js! {
                     @{&new_dom}.id = @{&dom_id};
                 }
                 parent_dom.append_child(&new_dom);
-                Renderer::render(&dom_id, *factory);
+                Renderer::_render(&dom_id, *factory);
             }
             DOMType::Comment => {}
         };
@@ -199,6 +207,7 @@ pub fn h(dom_type: DOMType, children: Vec<VirtualDOM>, attributes: Vec<Attribute
         name: dom_type.to_string(),
         dom_type: dom_type,
         children: children,
-        attributes: attributes
+        attributes: attributes,
+        dom_id: None
     };
 }
