@@ -41,20 +41,6 @@ pub fn render(component: Arc<Mutex<Component>>) -> VirtualDOM {
     "#)
 }
 
-pub fn child_render(component: Arc<Mutex<Component>>) -> VirtualDOM {
-    let mut count: i32 = 0;
-    let mut c = component.lock().unwrap();
-    let mut sa = c.state.lock().unwrap();
-    let mut s = sa.as_any().downcast_mut::<MainState>().unwrap();
-    html!(r#"
-        <div>
-            <h2>
-                child!
-            </h2>
-        </div>
-    "#)
-}
-
 fn handle_click(component: Arc<Mutex<Component>>) {
     let mut c = component.lock().unwrap();
     let mut sa = c.state.lock().unwrap();
@@ -74,12 +60,37 @@ fn factory() -> InitialComponent {
     }
 }
 
+pub fn child_render(component: Arc<Mutex<Component>>) -> VirtualDOM {
+    let mut count: i32 = 0;
+    let mut c = component.lock().unwrap();
+    let mut sa = c.state.lock().unwrap();
+    let mut s = sa.as_any().downcast_mut::<MainState>().unwrap();
+    html!(r#"
+        <div>
+            <h2>
+                child!
+            </h2>
+            <p>{s.count}</p>
+            <button on:click="child_handle_click">child count</button>
+        </div>
+    "#)
+}
+
+fn child_handle_click(component: Arc<Mutex<Component>>) {
+    let mut c = component.lock().unwrap();
+    let mut sa = c.state.lock().unwrap();
+    let mut s = sa.as_any().downcast_mut::<MainState>().unwrap();
+
+    s.count = s.count + 2;
+    c.update();
+}
+
 fn child_factory() -> InitialComponent {
     InitialComponent {
         render: child_render,
         state: Arc::new(Mutex::new(MainState {
             count: 0,
-            text: String::from("hoge")
+            text: String::from("child state!")
         })),
     }
 }
