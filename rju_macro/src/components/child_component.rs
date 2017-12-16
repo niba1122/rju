@@ -24,10 +24,8 @@ fn render(component: Arc<Mutex<Component>>) -> VirtualDOM {
     html!(r#"
         <div>
             <h2>
-                child!
+                child component!
             </h2>
-            <p>{s.count}</p>
-            <button on:click="handle_click">child count</button>
         </div>
     "#)
 }
