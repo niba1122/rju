@@ -8,5 +8,5 @@ use rju_macro::{html};
 mod components;
 
 fn main() {
-    Renderer::render("test", components::main::factory)
+    Renderer::render("test", components::main_component::factory)
 }

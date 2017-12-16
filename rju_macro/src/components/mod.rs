@@ -1,2 +1,2 @@
-pub mod main;
-pub mod child;
+pub mod main_component;
+pub mod child_component;
