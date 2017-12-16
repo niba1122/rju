@@ -66,7 +66,7 @@ mod html_parser {
                         variables.push(String::new());
                     }               
                 }
-                println!("DOMType::Text(format!(\"{}\",{}))", new_string, variables.join(","));
+                // println!("DOMType::Text(format!(\"{}\",{}))", new_string, variables.join(","));
                 format!("DOMType::Text(format!(\"{}\",{}))", new_string, variables.join(","))
             }
 
